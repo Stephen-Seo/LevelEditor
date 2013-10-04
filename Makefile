@@ -5,22 +5,24 @@ LINK = -L/home/stephen/Downloads/SFML-latestish/lib -lsfml-graphics -lsfml-windo
 BINDIR = bin
 SOURCES = \
         src/game.o \
-        src/sceneNode.o \
         src/stateStack.o \
         src/state.o
 
-all: $(BINDIR)/2DPrimer
+all: $(BINDIR) $(BINDIR)/LevelEditor
 
 test: tests/UnitTests
 
-$(BINDIR)/2DPrimer: $(SOURCES) src/main.o
-		$(CXX) -o $(BINDIR)/2DPrimer $(SOURCES) src/main.o $(LINK) 
+$(BINDIR):
+		mkdir -p $(BINDIR)
+
+$(BINDIR)/LevelEditor: $(SOURCES) src/main.o
+		$(CXX) -o $(BINDIR)/LevelEditor $(SOURCES) src/main.o $(LINK) 
 
 tests/UnitTests: $(SOURCES) src/unitTests.o
 		$(CXX) -o tests/UnitTests $(SOURCES) src/UnitTests.o $(LINK)
 
 clean:		src.clean tests.clean
-		rm -f $(BINDIR)/2DPrimer
+		rm -f $(BINDIR)/LevelEditor
 
 %.clean:
 		rm -f $*/*.o

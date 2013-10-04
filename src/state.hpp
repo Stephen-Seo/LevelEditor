@@ -2,6 +2,8 @@
 #ifndef STATE_HPP
 #define STATE_HPP
 
+#include <string>
+
 #include <SFML/Graphics.hpp>
 
 #include "resourceHolder.hpp"
@@ -19,11 +21,13 @@ public:
     {
         Context(sf::RenderWindow& window,
                 TextureHolder& textures,
-                FontHolder& fonts);
+                FontHolder& fonts,
+                std::string oFile);
 
         sf::RenderWindow* window;
         TextureHolder* textures;
         FontHolder* fonts;
+        std::string oFile;
     };
 
     State(StateStack& stack, Context context);

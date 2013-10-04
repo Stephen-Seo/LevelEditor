@@ -13,7 +13,7 @@
 class Game
 {
 public:
-    Game();
+    Game(std::string oFile, std::string imgFile);
     void run();
 private:
     void processEvents();

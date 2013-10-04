@@ -12,6 +12,7 @@ namespace Textures
 {
     enum ID
     {
+        TileSheet
     };
 }
 
