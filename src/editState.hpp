@@ -18,7 +18,8 @@ private:
     std::vector<char> kmap;
 //    std::map<char, sf::Vector2i> kmap;
 
+    sf::Sprite sheet;
+
     unsigned int tsize;
-    unsigned int width;
-    unsigned int height;
+    sf::Vector2u isize;
 };

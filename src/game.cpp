@@ -9,6 +9,10 @@ stateStack(State::Context(window, textureHolder, fontHolder, oFile, keyFile))
 {
     window.setFramerateLimit(60);
     textureHolder.load(Textures::TileSheet, imgFile);
+
+    registerStates();
+
+    stateStack.pushState(States::EditState);
 }
 
 void Game::run()
@@ -17,6 +21,7 @@ void Game::run()
     while (window.isOpen())
     {
         update();
+        processEvents();
         draw();
     }
 }
@@ -46,4 +51,5 @@ void Game::draw()
 
 void Game::registerStates()
 {
+    stateStack.registerState<EditState>(States::EditState);
 }

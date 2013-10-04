@@ -11,15 +11,6 @@ StateStack::StateStack(State::Context context)
 {
 }
 
-template <class T>
-void StateStack::registerState(States::ID stateID)
-{
-    factories[stateID] = [this] ()
-    {
-        return State::Ptr(new T(*this, context));
-    };
-}
-
 void StateStack::update()
 {
     for(auto iter = stack.rbegin(); iter != stack.rend(); ++iter)
@@ -92,4 +83,5 @@ void StateStack::applyPendingChanges()
             break;
         }
     } );
+    pendingList.clear();
 }

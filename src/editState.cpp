@@ -6,6 +6,10 @@ EditState::EditState(StateStack& stack, Context context)
 twindow(),
 kmap()
 {
+    sheet.setTexture(context.textures->get(Textures::TileSheet));
+
+    sf::Vector2u isize = context.textures->get(Textures::TileSheet).getSize();
+
     std::fstream ks;
     ks.open(context.keyFile);
     if(!ks.is_open())
@@ -15,21 +19,7 @@ kmap()
     }
 
     ks >> tsize;
-    if(ks.fail() || ks.bad())
-    {
-        ks.close();
-        throw std::runtime_error("Unable to read Keyfile.");
-    }
-
-    ks >> width;
-    if(ks.fail() || ks.bad())
-    {
-        ks.close();
-        throw std::runtime_error("Unable to read Keyfile.");
-    }
-
-    ks >> height;
-    if(ks.fail() || ks.bad())
+    if(ks.fail())
     {
         ks.close();
         throw std::runtime_error("Unable to read Keyfile.");
@@ -43,21 +33,23 @@ kmap()
             kmap.push_back(s);
     }
 
-    if(ks.fail())
-    {
-        ks.close();
-        throw std::runtime_error("Unable to read Keyfile. (stream failbit true.)");
-    }
-    else if(ks.bad())
+    std::cout << kmap.size() << " is size of map.\n";
+
+    if(ks.bad())
     {
         ks.close();
         throw std::runtime_error("Unable to read Keyfile. (stream badbit true.)");
     }
+    else if(ks.fail() && !ks.eof())
+    {
+        ks.close();
+        throw std::runtime_error("Unable to read Keyfile. (stream failbit true.)");
+    }
 
     ks.close();
 
-    if(kmap.size() != width*height)
-        std::cout << "Warning: Key contents do not match given width/height.";
+    if(kmap.size() != isize.x*isize.y/tsize/tsize)
+        std::cout << "Warning: Key contents do not match given width/height.\n";
 }
 
 void EditState::draw()

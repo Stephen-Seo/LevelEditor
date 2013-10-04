@@ -68,6 +68,8 @@ int main(int argc, char** argv) {
         return 0;
     }
 
+    std::cout << "Using sheet " << imgFile << "\nUsing key " << keyFile << "\nUsing output " << oFile << "\n";
+
     try {
         Game game(oFile, imgFile, keyFile);
         game.run();

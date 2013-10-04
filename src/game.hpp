@@ -9,6 +9,8 @@
 #include "resourceIdentifiers.hpp"
 #include "state.hpp"
 #include "stateStack.hpp"
+#include "stateIdentifiers.hpp"
+#include "editState.hpp"
 
 class Game
 {
