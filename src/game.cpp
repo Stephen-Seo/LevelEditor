@@ -1,11 +1,11 @@
 
 #include "game.hpp"
 
-Game::Game(std::string oFile, std::string imgFile)
+Game::Game(std::string oFile, std::string imgFile, std::string keyFile)
 : window(sf::VideoMode(720,480), "SFML App"),
 textureHolder(),
 fontHolder(),
-stateStack(State::Context(window, textureHolder, fontHolder, oFile))
+stateStack(State::Context(window, textureHolder, fontHolder, oFile, keyFile))
 {
     window.setFramerateLimit(60);
     textureHolder.load(Textures::TileSheet, imgFile);

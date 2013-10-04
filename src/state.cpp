@@ -2,8 +2,8 @@
 #include "state.hpp"
 #include "stateStack.hpp"
 
-State::Context::Context(sf::RenderWindow& window, TextureHolder& textures, FontHolder& fonts, std::string oFile)
-: window(&window), textures(&textures), fonts(&fonts), oFile(oFile)
+State::Context::Context(sf::RenderWindow& window, TextureHolder& textures, FontHolder& fonts, std::string oFile, std::string keyFile)
+: window(&window), textures(&textures), fonts(&fonts), oFile(oFile), keyFile(keyFile)
 {}
 
 State::State(StateStack& stack, Context context)

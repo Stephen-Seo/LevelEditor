@@ -22,12 +22,14 @@ public:
         Context(sf::RenderWindow& window,
                 TextureHolder& textures,
                 FontHolder& fonts,
-                std::string oFile);
+                std::string oFile,
+                std::string keyFile);
 
         sf::RenderWindow* window;
         TextureHolder* textures;
         FontHolder* fonts;
         std::string oFile;
+        std::string keyFile;
     };
 
     State(StateStack& stack, Context context);

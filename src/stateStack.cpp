@@ -22,10 +22,11 @@ void StateStack::registerState(States::ID stateID)
 
 void StateStack::update()
 {
-    std::for_each(stack.begin(), stack.end(), [] (State::Ptr& state)
+    for(auto iter = stack.rbegin(); iter != stack.rend(); ++iter)
     {
-        state->update();
-    } );
+        if(!(*iter)->update())
+            break;
+    }
     applyPendingChanges();
 }
 

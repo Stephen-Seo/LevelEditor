@@ -6,7 +6,8 @@ BINDIR = bin
 SOURCES = \
         src/game.o \
         src/stateStack.o \
-        src/state.o
+        src/state.o \
+        src/editState.o
 
 all: $(BINDIR) $(BINDIR)/LevelEditor
 
