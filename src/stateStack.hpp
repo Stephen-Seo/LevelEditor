@@ -24,7 +24,7 @@ public:
     template <class T>
     void registerState(States::ID stateID);
 
-    void update(sf::Time dt);
+    void update();
     void draw();
     void handleEvent(const sf::Event& event);
 

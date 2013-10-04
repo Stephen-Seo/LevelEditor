@@ -17,12 +17,11 @@ public:
     void run();
 private:
     void processEvents();
-    void update(sf::Time deltaTime);
+    void update();
     void draw();
     void registerStates();
 
     sf::RenderWindow window;
-    sf::Time frameTime;
 
     TextureHolder textureHolder;
     FontHolder fontHolder;

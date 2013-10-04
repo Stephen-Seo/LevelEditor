@@ -20,11 +20,11 @@ void StateStack::registerState(States::ID stateID)
     };
 }
 
-void StateStack::update(sf::Time dt)
+void StateStack::update()
 {
-    std::for_each(stack.begin(), stack.end(), [dt] (State::Ptr& state)
+    std::for_each(stack.begin(), stack.end(), [] (State::Ptr& state)
     {
-        state->update(dt);
+        state->update();
     } );
     applyPendingChanges();
 }
