@@ -2,10 +2,11 @@
 #include "game.hpp"
 
 Game::Game(std::string oFile, std::string imgFile, std::string keyFile)
-: window(sf::VideoMode(720,480), "SFML App"),
+: window(sf::VideoMode(800,600), "SFML App"),
+twindow(),
 textureHolder(),
 fontHolder(),
-stateStack(State::Context(window, textureHolder, fontHolder, oFile, keyFile))
+stateStack(State::Context(window, twindow, textureHolder, fontHolder, oFile, keyFile))
 {
     window.setFramerateLimit(60);
     textureHolder.load(Textures::TileSheet, imgFile);
@@ -24,6 +25,7 @@ void Game::run()
         processEvents();
         draw();
     }
+    twindow.close();
 }
 
 void Game::processEvents()
@@ -44,7 +46,7 @@ void Game::update()
 
 void Game::draw()
 {
-    window.clear();
+    window.clear(sf::Color(127,127,127));
     stateStack.draw();
     window.display();
 }

@@ -3,6 +3,8 @@
 #include <stdexcept>
 #include <iostream>
 
+#include <SFML/Graphics.hpp>
+
 #include "state.hpp"
 
 class EditState : public State
@@ -14,12 +16,19 @@ public:
     virtual bool update();
     virtual bool handleEvent(const sf::Event& event);
 private:
-    sf::RenderWindow twindow;
     std::vector<char> kmap;
-//    std::map<char, sf::Vector2i> kmap;
+    std::vector<std::vector<char> > map;
 
     sf::Sprite sheet;
 
     unsigned int tsize;
     sf::Vector2u isize;
+    int width;
+
+    sf::Vector2u selection;
+
+    bool drawing;
+    bool deleting;
+
+    sf::CircleShape sHighlight;
 };

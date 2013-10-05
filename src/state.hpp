@@ -20,12 +20,14 @@ public:
     struct Context
     {
         Context(sf::RenderWindow& window,
+                sf::RenderWindow& twindow,
                 TextureHolder& textures,
                 FontHolder& fonts,
                 std::string oFile,
                 std::string keyFile);
 
         sf::RenderWindow* window;
+        sf::RenderWindow* twindow;
         TextureHolder* textures;
         FontHolder* fonts;
         std::string oFile;

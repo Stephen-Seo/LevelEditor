@@ -24,6 +24,7 @@ private:
     void registerStates();
 
     sf::RenderWindow window;
+    sf::RenderWindow twindow;
 
     TextureHolder textureHolder;
     FontHolder fontHolder;
