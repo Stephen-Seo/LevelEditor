@@ -9,7 +9,6 @@ selection(0,0),
 drawing(false),
 deleting(false)
 {
-
     sheet.setTexture(getContext().textures->get(Textures::TileSheet));
 
     isize = getContext().textures->get(Textures::TileSheet).getSize();
@@ -60,6 +59,22 @@ deleting(false)
     for(unsigned int i = 0; i < 600 / tsize; ++i)
         map.push_back(std::vector<char> ());
 
+    std::fstream of;
+    of.open(getContext().oFile);
+    std::string line;
+    if(of.is_open())
+    {
+        for(int i=0; std::getline(of, line); ++i)
+        {
+            while(map.size() <= i)
+                map.push_back(std::vector<char> ());
+
+            for(int j=0; j < line.size(); ++j)
+                map[i].push_back(line[j]);
+        }
+        of.close();
+    }
+
     width = isize.x / tsize;
     std::cout << "width is " << width << "\n";
 
@@ -109,7 +124,7 @@ bool EditState::update()
         sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
         int x = (int)(gpos.x / tsize);
         int y = (int)(gpos.y / tsize);
-        if(y < map.size())
+        if(y < map.size() && x >= 0)
         {
             while(map[y].size() <= x)
             {
@@ -125,7 +140,7 @@ bool EditState::update()
         sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
         int x = (int)(gpos.x / tsize);
         int y = (int)(gpos.y / tsize);
-        if(y < map.size())
+        if(y < map.size() && x >= 0)
         {
             while(map[y].size() <= x)
             {
@@ -154,11 +169,52 @@ bool EditState::handleEvent(const sf::Event& event)
         drawing = true;
     else if(event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left)
         drawing = false;
-
-    if(event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Right)
+    else if(event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Right)
         deleting = true;
     else if(event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Right)
         deleting = false;
+    else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Return)
+    {
+        std::fstream of;
+        of.open(getContext().oFile, std::ios::trunc | std::ios::out);
+        if(!of.is_open())
+        {
+            of.clear();
+            of.open(getContext().oFile, std::ios::out);
+            of.close();
+            of.open(getContext().oFile, std::ios::trunc | std::ios::out);
+        }
+
+        for(int y=0; y<map.size(); ++y)
+        {
+            for(int x=0; x<map[y].size(); ++x)
+            {
+                of << map[y][x];
+            }
+            if(y != map.size()-1)
+                of << '\n';
+        }
+
+        of.flush();
+        of.close();
+    }
+
+    else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Right)
+    {
+        sf::View cView;
+        cView.setSize(getContext().window->getView().getSize());
+        cView.setCenter(getContext().window->getView().getCenter());
+        cView.move((float)tsize,0);
+        getContext().window->setView(cView);
+    }
+    else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Left)
+    {
+        sf::View cView;
+        cView.setSize(getContext().window->getView().getSize());
+        cView.setCenter(getContext().window->getView().getCenter());
+        cView.move(-(float)tsize,0);
+        getContext().window->setView(cView);
+    }
 
     return true;
 }

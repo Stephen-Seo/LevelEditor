@@ -31,4 +31,6 @@ private:
     bool deleting;
 
     sf::CircleShape sHighlight;
+
+    sf::View cView;
 };
