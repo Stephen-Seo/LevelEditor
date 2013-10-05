@@ -1,7 +1,7 @@
 CXX = g++ -W -Wall -Wextra -pedantic -std=c++0x
 CFLAGS = -c -g
 INCLUDE = -I/home/stephen/Downloads/SFML-latestish/include
-LINK = -L/home/stephen/Downloads/SFML-latestish/lib -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -lsfml-network
+LINK = -L/home/stephen/Downloads/SFML-latestish/lib -lsfml-graphics -lsfml-window -lsfml-system
 BINDIR = bin
 SOURCES = \
         src/game.o \

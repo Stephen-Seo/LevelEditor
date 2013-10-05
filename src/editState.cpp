@@ -82,6 +82,9 @@ deleting(false)
     sHighlight.setOutlineColor(sf::Color::Red);
     sHighlight.setOutlineThickness(1.f);
     sHighlight.setRadius(tsize/2.f);
+
+    saveIndicator.setSize(sf::Vector2f(800.f,600.f));
+    saveIndicator.setFillColor(sf::Color(255,255,255,0));
 }
 
 void EditState::draw()
@@ -100,6 +103,8 @@ void EditState::draw()
                     getContext().window->draw(sheet);
                     break;
                 }
+
+    getContext().window->draw(saveIndicator);
 
     // Begin drawing for twindow
     getContext().twindow->clear(sf::Color(127,127,127));
@@ -150,6 +155,17 @@ bool EditState::update()
         }
     }
 
+    saveIndicator.setPosition(getContext().window->mapPixelToCoords(sf::Vector2i(0,0)));
+    if(saveIndicator.getFillColor().a > 0)
+    {
+        unsigned int a = saveIndicator.getFillColor().a;
+        if(a >= 5)
+            a-=5;
+        else
+            a=0;
+        saveIndicator.setFillColor(sf::Color(255,255,255,a));
+    }
+
     // Begin twindow event handling
     sf::Event event;
     while(getContext().twindow->pollEvent(event))
@@ -197,6 +213,8 @@ bool EditState::handleEvent(const sf::Event& event)
 
         of.flush();
         of.close();
+
+        saveIndicator.setFillColor(sf::Color::White);
     }
 
     else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Right)
