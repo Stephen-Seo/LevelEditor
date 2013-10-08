@@ -33,6 +33,7 @@ private:
     sf::CircleShape sHighlight;
 
     sf::RectangleShape saveIndicator;
+    sf::RectangleShape leftIndicator;
 
     sf::View cView;
 };

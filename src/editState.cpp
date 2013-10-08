@@ -85,11 +85,17 @@ deleting(false)
 
     saveIndicator.setSize(sf::Vector2f(800.f,600.f));
     saveIndicator.setFillColor(sf::Color(255,255,255,0));
+
+    leftIndicator.setSize(sf::Vector2f(4.f,600.f));
+    leftIndicator.setFillColor(sf::Color::Blue);
+    leftIndicator.setPosition(-2.f,0.f);
 }
 
 void EditState::draw()
 {
     // Begin drawing for main window
+    getContext().window->draw(leftIndicator);
+
     int left,top;
     for(int y=0; y < map.size(); ++y)
         for(int x=0; x < map[y].size(); ++x)
