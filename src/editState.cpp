@@ -89,12 +89,26 @@ deleting(false)
     leftIndicator.setSize(sf::Vector2f(4.f,600.f));
     leftIndicator.setFillColor(sf::Color::Blue);
     leftIndicator.setPosition(-2.f,0.f);
+
+    grid.setFillColor(sf::Color(200,200,200));
+    grid.setRadius(4.f);
+    grid.setOrigin(sf::Vector2f(grid.getLocalBounds().width/2.f,grid.getLocalBounds().height/2.f));
 }
 
 void EditState::draw()
 {
     // Begin drawing for main window
     getContext().window->draw(leftIndicator);
+
+    float l = getContext().window->getView().getCenter().x -
+              getContext().window->getView().getSize().x / 2.f;
+    
+    for(float y=0.f; y < 600.f; y+=(float)tsize)
+        for(float x=l; x < l + 800.f; x+=(float)tsize)
+        {
+            grid.setPosition(x,y);
+            getContext().window->draw(grid);
+        }
 
     int left,top;
     for(int y=0; y < map.size(); ++y)

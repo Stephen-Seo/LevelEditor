@@ -31,6 +31,7 @@ private:
     bool deleting;
 
     sf::CircleShape sHighlight;
+    sf::CircleShape grid;
 
     sf::RectangleShape saveIndicator;
     sf::RectangleShape leftIndicator;
