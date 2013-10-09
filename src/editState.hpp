@@ -2,6 +2,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <iostream>
+#include <sstream>
 
 #include <SFML/Graphics.hpp>
 
@@ -35,6 +36,7 @@ private:
 
     sf::RectangleShape saveIndicator;
     sf::RectangleShape leftIndicator;
+    sf::RectangleShape topIndicator;
 
     sf::View cView;
 };

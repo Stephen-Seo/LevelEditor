@@ -62,6 +62,7 @@ deleting(false)
     std::fstream of;
     of.open(getContext().oFile);
     std::string line;
+
     if(of.is_open())
     {
         for(int i=0; std::getline(of, line); ++i)
@@ -69,8 +70,18 @@ deleting(false)
             while(map.size() <= i)
                 map.push_back(std::vector<char> ());
 
+        }
+        of.close();
+    }
+
+    of.clear();
+    of.open(getContext().oFile);
+    if(of.is_open())
+    {
+        for(int i=0; std::getline(of, line); ++i)
+        {
             for(int j=0; j < line.size(); ++j)
-                map[i].push_back(line[j]);
+                map[map.size() - i - 1].push_back(line[j]);
         }
         of.close();
     }
@@ -87,24 +98,40 @@ deleting(false)
     saveIndicator.setFillColor(sf::Color(255,255,255,0));
 
     leftIndicator.setSize(sf::Vector2f(4.f,600.f));
-    leftIndicator.setFillColor(sf::Color::Blue);
+    leftIndicator.setFillColor(sf::Color::Green);
     leftIndicator.setPosition(-2.f,0.f);
+
+    topIndicator.setSize(sf::Vector2f(800.f,4.f));
+    topIndicator.setFillColor(sf::Color::Red);
 
     grid.setFillColor(sf::Color(200,200,200));
     grid.setRadius(4.f);
     grid.setOrigin(sf::Vector2f(grid.getLocalBounds().width/2.f,grid.getLocalBounds().height/2.f));
+
+    sf::View cView;
+    cView.setSize(getContext().window->getView().getSize());
+    cView.setCenter(getContext().window->getView().getCenter());
+    cView.move(0,-600.f);
+    getContext().window->setView(cView);
 }
 
 void EditState::draw()
 {
     // Begin drawing for main window
-    getContext().window->draw(leftIndicator);
 
     float l = getContext().window->getView().getCenter().x -
               getContext().window->getView().getSize().x / 2.f;
+    float t = getContext().window->getView().getCenter().y -
+              getContext().window->getView().getSize().y / 2.f;
+
+    leftIndicator.setPosition(-2.f, t);
+    getContext().window->draw(leftIndicator);
+
+    topIndicator.setPosition(l, -2.f);
+    getContext().window->draw(topIndicator);
     
-    for(float y=0.f; y < 600.f; y+=(float)tsize)
-        for(float x=l; x < l + 800.f; x+=(float)tsize)
+    for(float y=t; y <= t + 600.f; y+=(float)tsize)
+        for(float x=l; x <= l + 800.f; x+=(float)tsize)
         {
             grid.setPosition(x,y);
             getContext().window->draw(grid);
@@ -119,10 +146,23 @@ void EditState::draw()
                     left = (u % width) * tsize;
                     top = (u / width) * tsize;
                     sheet.setTextureRect(sf::IntRect(left,top,tsize,tsize));
-                    sheet.setPosition(x*tsize, y*tsize);
+                    sheet.setPosition(x*tsize, -y*(int)tsize - (int)tsize);
                     getContext().window->draw(sheet);
                     break;
                 }
+
+/** DEBUG
+    printf("\nMapContents:\n");
+    for(int y=0; y < map.size(); ++y)
+    {
+        printf("%d]",y);
+        for(int x=0; x < map[y].size(); ++x)
+        {
+            printf("%c",map[y][x]);
+        }
+        printf("\n");
+    }
+*/
 
     getContext().window->draw(saveIndicator);
 
@@ -141,6 +181,20 @@ void EditState::draw()
 bool EditState::update()
 {
     // Begin main update
+    int l = (int)( getContext().window->getView().getCenter().x -
+                   getContext().window->getView().getSize().x / 2.f);
+    int t = (int)( getContext().window->getView().getCenter().y -
+                   getContext().window->getView().getSize().y / 2.f);
+
+    t = -t - 600;
+
+    l /= tsize;
+    t /= tsize;
+
+    std::stringstream ss;
+    ss << "LevelEditor [" << l << "," << t << "]";
+    getContext().window->setTitle(ss.str());
+
 
     if(deleting)
     {
@@ -148,8 +202,8 @@ bool EditState::update()
         sf::Vector2i mpos = sf::Mouse::getPosition(*(getContext().window));
         sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
         int x = (int)(gpos.x / tsize);
-        int y = (int)(gpos.y / tsize);
-        if(y < map.size() && x >= 0)
+        int y = -(int)(gpos.y / tsize);
+        if(y >= 0 && y < map.size() && x >= 0 && x < map[y].size())
         {
             while(map[y].size() <= x)
             {
@@ -164,9 +218,14 @@ bool EditState::update()
         sf::Vector2i mpos = sf::Mouse::getPosition(*(getContext().window));
         sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
         int x = (int)(gpos.x / tsize);
-        int y = (int)(gpos.y / tsize);
-        if(y < map.size() && x >= 0)
+        int y = -(int)(gpos.y / tsize);
+        //printf("%d,%d\n",x,y);
+        if(y >= 0 && x >= 0)
         {
+            while(map.size() <= y)
+            {
+                map.push_back(std::vector<char>());
+            }
             while(map[y].size() <= x)
             {
                 map[y].push_back(' ');
@@ -221,6 +280,7 @@ bool EditState::handleEvent(const sf::Event& event)
             of.open(getContext().oFile, std::ios::trunc | std::ios::out);
         }
 
+/*
         for(int y=0; y<map.size(); ++y)
         {
             for(int x=0; x<map[y].size(); ++x)
@@ -229,6 +289,15 @@ bool EditState::handleEvent(const sf::Event& event)
             }
             if(y != map.size()-1)
                 of << '\n';
+        }
+*/
+        for(auto y = map.rbegin(); y != map.rend(); ++y)
+        {
+            for(auto x = (*y).begin(); x != (*y).end(); ++x)
+            {
+                of << *x;
+            }
+            of << '\n';
         }
 
         of.flush();
@@ -251,6 +320,22 @@ bool EditState::handleEvent(const sf::Event& event)
         cView.setSize(getContext().window->getView().getSize());
         cView.setCenter(getContext().window->getView().getCenter());
         cView.move(-(float)tsize,0);
+        getContext().window->setView(cView);
+    }
+    else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Up)
+    {
+        sf::View cView;
+        cView.setSize(getContext().window->getView().getSize());
+        cView.setCenter(getContext().window->getView().getCenter());
+        cView.move(0,-(float)tsize);
+        getContext().window->setView(cView);
+    }
+    else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Down)
+    {
+        sf::View cView;
+        cView.setSize(getContext().window->getView().getSize());
+        cView.setCenter(getContext().window->getView().getCenter());
+        cView.move(0,(float)tsize);
         getContext().window->setView(cView);
     }
 
