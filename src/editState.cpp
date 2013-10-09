@@ -130,7 +130,7 @@ void EditState::draw()
     topIndicator.setPosition(l, -2.f);
     getContext().window->draw(topIndicator);
     
-    for(float y=t; y <= t + 600.f; y+=(float)tsize)
+    for(float y=t + 600.f; y >= t; y-=(float)tsize)
         for(float x=l; x <= l + 800.f; x+=(float)tsize)
         {
             grid.setPosition(x,y);
