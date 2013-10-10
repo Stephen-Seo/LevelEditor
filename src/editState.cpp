@@ -30,8 +30,9 @@ deleting(false)
 
     char s;
 
-    while(ks >> s)
+    while((s = ks.get()) != std::char_traits<char>::eof())
     {
+        
         if(s != '\n')
             kmap.push_back(s);
     }
@@ -113,6 +114,12 @@ deleting(false)
     cView.setCenter(getContext().window->getView().getCenter());
     cView.move(0,-600.f);
     getContext().window->setView(cView);
+
+    printf("\nKMap contents:\n");
+    for(int i = 0; i < kmap.size(); ++i)
+        printf("%c",kmap[i]);
+    printf("\n");
+
 }
 
 void EditState::draw()
@@ -130,12 +137,6 @@ void EditState::draw()
     topIndicator.setPosition(l, -2.f);
     getContext().window->draw(topIndicator);
     
-    for(float y=t + 600.f; y >= t; y-=(float)tsize)
-        for(float x=l; x <= l + 800.f; x+=(float)tsize)
-        {
-            grid.setPosition(x,y);
-            getContext().window->draw(grid);
-        }
 
     int left,top;
     for(int y=0; y < map.size(); ++y)
@@ -151,7 +152,15 @@ void EditState::draw()
                     break;
                 }
 
-/** DEBUG
+    for(float y=t + 600.f; y >= t; y-=(float)tsize)
+        for(float x=l; x <= l + 800.f; x+=(float)tsize)
+        {
+            grid.setPosition(x,y);
+            getContext().window->draw(grid);
+        }
+
+
+/*
     printf("\nMapContents:\n");
     for(int y=0; y < map.size(); ++y)
     {
@@ -180,6 +189,7 @@ void EditState::draw()
 
 bool EditState::update()
 {
+
     // Begin main update
     int l = (int)( getContext().window->getView().getCenter().x -
                    getContext().window->getView().getSize().x / 2.f);
