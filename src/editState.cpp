@@ -3,8 +3,9 @@
 
 EditState::EditState(StateStack& stack, Context context)
 : State(stack, context),
+currentMode(Mode::layer0),
 kmap(),
-map(),
+map_layer0(),
 selection(0,0),
 drawing(false),
 deleting(false)
@@ -13,8 +14,9 @@ deleting(false)
 
     isize = getContext().textures->get(Textures::TileSheet).getSize();
 
+    // Parse keyfile
     std::fstream ks;
-    ks.open(getContext().keyFile);
+    ks.open(getContext().oFile + K_SUFFIX);
     if(!ks.is_open())
     {
         ks.close();
@@ -55,38 +57,97 @@ deleting(false)
     if(kmap.size() != isize.x*isize.y/tsize/tsize)
         std::cout << "Warning: Key contents do not match given width/height.\n";
 
+    // create window for selecting tiles
     getContext().twindow->create(sf::VideoMode(isize.x,isize.y), "TileSheet");
 
     for(unsigned int i = 0; i < 600 / tsize; ++i)
-        map.push_back(std::vector<char> ());
+        map_layer0.push_back(std::vector<char> ());
 
+    // parse layer 0
     std::fstream of;
-    of.open(getContext().oFile);
+    of.open(getContext().oFile + L0_SUFFIX);
     std::string line;
 
     if(of.is_open())
     {
         for(int i=0; std::getline(of, line); ++i)
         {
-            while(map.size() <= i)
-                map.push_back(std::vector<char> ());
+            while(map_layer0.size() <= i)
+                map_layer0.push_back(std::vector<char> ());
 
         }
         of.close();
     }
 
     of.clear();
-    of.open(getContext().oFile);
+    of.open(getContext().oFile + L0_SUFFIX);
     if(of.is_open())
     {
         for(int i=0; std::getline(of, line); ++i)
         {
             for(int j=0; j < line.size(); ++j)
-                map[map.size() - i - 1].push_back(line[j]);
+                map_layer0[map_layer0.size() - i - 1].push_back(line[j]);
         }
         of.close();
     }
 
+    // parse layer 1
+    of.clear();
+    of.open(getContext().oFile + L1_SUFFIX);
+    line = "";
+
+    if(of.is_open())
+    {
+        for(int i=0; std::getline(of, line); ++i)
+        {
+            while(map_layer1.size() <= i)
+                map_layer1.push_back(std::vector<char> ());
+
+        }
+        of.close();
+    }
+
+    of.clear();
+    of.open(getContext().oFile + L1_SUFFIX);
+    if(of.is_open())
+    {
+        for(int i=0; std::getline(of, line); ++i)
+        {
+            for(int j=0; j < line.size(); ++j)
+                map_layer1[map_layer1.size() - i - 1].push_back(line[j]);
+        }
+        of.close();
+    }
+
+    // parse waypoints
+    of.clear();
+    of.open(getContext().oFile + W_SUFFIX);
+    line = "";
+    bool hashDelimeter = false;
+
+    if(of.is_open())
+    {
+        // find delimeter, parse symbols
+        do
+        {
+            std:getline(of, line);
+            if(line[0] == "#")
+            {
+                hashDelimeter = true;
+                break;
+            }
+            wmap.push_back(line[0]);
+        }while(line != "");
+        // location parsing
+        if(hashDelimiter)
+        {
+            for(int i=0; std::getline(of, line); ++i)
+            {
+            }
+        }
+    }
+
+    // other initializations
     width = isize.x / tsize;
     std::cout << "width is " << width << "\n";
 
@@ -139,10 +200,10 @@ void EditState::draw()
     
 
     int left,top;
-    for(int y=0; y < map.size(); ++y)
-        for(int x=0; x < map[y].size(); ++x)
+    for(int y=0; y < map_layer0.size(); ++y)
+        for(int x=0; x < map_layer0[y].size(); ++x)
             for(int u=0; u < kmap.size(); ++u)
-                if(map[y][x] != ' ' && kmap[u] == map[y][x])
+                if(map_layer0[y][x] != ' ' && kmap[u] == map_layer0[y][x])
                 {
                     left = (u % width) * tsize;
                     top = (u / width) * tsize;
@@ -162,12 +223,12 @@ void EditState::draw()
 
 /*
     printf("\nMapContents:\n");
-    for(int y=0; y < map.size(); ++y)
+    for(int y=0; y < map_layer0.size(); ++y)
     {
         printf("%d]",y);
-        for(int x=0; x < map[y].size(); ++x)
+        for(int x=0; x < map_layer0[y].size(); ++x)
         {
-            printf("%c",map[y][x]);
+            printf("%c",map_layer0[y][x]);
         }
         printf("\n");
     }
@@ -213,13 +274,13 @@ bool EditState::update()
         sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
         int x = (int)(gpos.x / tsize);
         int y = -(int)(gpos.y / tsize);
-        if(y >= 0 && y < map.size() && x >= 0 && x < map[y].size())
+        if(y >= 0 && y < map_layer0.size() && x >= 0 && x < map_layer0[y].size())
         {
-            while(map[y].size() <= x)
+            while(map_layer0[y].size() <= x)
             {
-                map[y].push_back(' ');
+                map_layer0[y].push_back(' ');
             }
-            map[y][x] = selChar;
+            map_layer0[y][x] = selChar;
         }
     }
     else if(drawing)
@@ -232,15 +293,15 @@ bool EditState::update()
         //printf("%d,%d\n",x,y);
         if(y >= 0 && x >= 0)
         {
-            while(map.size() <= y)
+            while(map_layer0.size() <= y)
             {
-                map.push_back(std::vector<char>());
+                map_layer0.push_back(std::vector<char>());
             }
-            while(map[y].size() <= x)
+            while(map_layer0[y].size() <= x)
             {
-                map[y].push_back(' ');
+                map_layer0[y].push_back(' ');
             }
-            map[y][x] = selChar;
+            map_layer0[y][x] = selChar;
         }
     }
 
@@ -281,7 +342,7 @@ bool EditState::handleEvent(const sf::Event& event)
     else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Return)
     {
         std::fstream of;
-        of.open(getContext().oFile, std::ios::trunc | std::ios::out);
+        of.open(getContext().oFile + L0_SUFFIX, std::ios::trunc | std::ios::out);
         if(!of.is_open())
         {
             of.clear();
@@ -291,17 +352,17 @@ bool EditState::handleEvent(const sf::Event& event)
         }
 
 /*
-        for(int y=0; y<map.size(); ++y)
+        for(int y=0; y<map_layer0.size(); ++y)
         {
-            for(int x=0; x<map[y].size(); ++x)
+            for(int x=0; x<map_layer0[y].size(); ++x)
             {
-                of << map[y][x];
+                of << map_layer0[y][x];
             }
-            if(y != map.size()-1)
+            if(y != map_layer0.size()-1)
                 of << '\n';
         }
 */
-        for(auto y = map.rbegin(); y != map.rend(); ++y)
+        for(auto y = map_layer0.rbegin(); y != map_layer0.rend(); ++y)
         {
             for(auto x = (*y).begin(); x != (*y).end(); ++x)
             {

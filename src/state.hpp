@@ -23,15 +23,13 @@ public:
                 sf::RenderWindow& twindow,
                 TextureHolder& textures,
                 FontHolder& fonts,
-                std::string oFile,
-                std::string keyFile);
+                std::string oFile);
 
         sf::RenderWindow* window;
         sf::RenderWindow* twindow;
         TextureHolder* textures;
         FontHolder* fonts;
         std::string oFile;
-        std::string keyFile;
     };
 
     State(StateStack& stack, Context context);

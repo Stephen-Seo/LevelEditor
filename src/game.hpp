@@ -15,7 +15,7 @@
 class Game
 {
 public:
-    Game(std::string oFile, std::string imgFile, std::string keyFile);
+    Game(std::string oFile, std::string imgFile);
     void run();
 private:
     void processEvents();
