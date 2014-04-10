@@ -142,7 +142,7 @@ void EditState::draw()
     for(int y=0; y < map.size(); ++y)
         for(int x=0; x < map[y].size(); ++x)
             for(int u=0; u < kmap.size(); ++u)
-                if(kmap[u] == map[y][x])
+                if(map[y][x] != ' ' && kmap[u] == map[y][x])
                 {
                     left = (u % width) * tsize;
                     top = (u / width) * tsize;
