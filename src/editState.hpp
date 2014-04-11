@@ -10,6 +10,9 @@
 #include <SFML/Graphics.hpp>
 
 #include "state.hpp"
+#include "waypoint.hpp"
+
+#include "coordinateMap.hpp"
 
 #define K_SUFFIX "_key"
 #define L0_SUFFIX "_level_layer0"
@@ -33,22 +36,22 @@ private:
 
     Mode currentMode;
 
-    std::vector<char> kmap;
-    std::vector<std::vector<char> > map_layer0;
-    std::vector<std::vector<char> > map_layer1;
+    std::map<char, std::pair<int,int> > kmap;
+    CoordinateMap<char> map_layer0;
+    CoordinateMap<char> map_layer1;
 
-    std::vector<char> wmap;
-    std::vector<std::vector<char> > map_waypoint;
+    WaypointManager wm;
+    CoordinateMap<char> map_waypoint;
 
-    std::vector<std::vector<char> > map_obstacles;
+    CoordinateMap<char> map_obstacles;
 
     sf::Sprite sheet;
 
-    unsigned int tsize;
+    int tsize;
     sf::Vector2u isize;
     int width;
 
-    sf::Vector2u selection;
+    sf::Vector2i selection;
 
     bool drawing;
     bool deleting;

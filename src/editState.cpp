@@ -5,6 +5,7 @@ EditState::EditState(StateStack& stack, Context context)
 : State(stack, context),
 currentMode(Mode::layer0),
 kmap(),
+wm(),
 map_layer0(),
 selection(0,0),
 drawing(false),
@@ -30,16 +31,20 @@ deleting(false)
         throw std::runtime_error("Unable to read Keyfile.");
     }
 
-    char s;
+    std::string line;
 
-    while((s = ks.get()) != std::char_traits<char>::eof())
+    for(int j=0; std::getline(ks, line); ++j)
     {
-        
-        if(s != '\n')
-            kmap.push_back(s);
+        for(int i=0; i < line.size(); ++i)
+        {
+            if(line[i] != ' ')
+            {
+                kmap.insert(std::pair<char, std::pair<int, int> >(line[i], std::pair<int, int>(i,j)));
+            }
+        }
     }
 
-    std::cout << kmap.size() << " is size of map.\n";
+    std::cout << kmap.size() << " is number of symbols in key map.\n";
 
     if(ks.bad())
     {
@@ -54,39 +59,25 @@ deleting(false)
 
     ks.close();
 
-    if(kmap.size() != isize.x*isize.y/tsize/tsize)
-        std::cout << "Warning: Key contents do not match given width/height.\n";
-
     // create window for selecting tiles
     getContext().twindow->create(sf::VideoMode(isize.x,isize.y), "TileSheet");
-
-    for(unsigned int i = 0; i < 600 / tsize; ++i)
-        map_layer0.push_back(std::vector<char> ());
 
     // parse layer 0
     std::fstream of;
     of.open(getContext().oFile + L0_SUFFIX);
-    std::string line;
+    line = "";
 
     if(of.is_open())
     {
-        for(int i=0; std::getline(of, line); ++i)
+        for(int j=0; std::getline(of, line); ++j)
         {
-            while(map_layer0.size() <= i)
-                map_layer0.push_back(std::vector<char> ());
-
-        }
-        of.close();
-    }
-
-    of.clear();
-    of.open(getContext().oFile + L0_SUFFIX);
-    if(of.is_open())
-    {
-        for(int i=0; std::getline(of, line); ++i)
-        {
-            for(int j=0; j < line.size(); ++j)
-                map_layer0[map_layer0.size() - i - 1].push_back(line[j]);
+            for(int i=0; i < line.size(); ++i)
+            {
+                if(line[i] != ' ')
+                {
+                    map_layer0.add(line[i], i, j);
+                }
+            }
         }
         of.close();
     }
@@ -98,23 +89,15 @@ deleting(false)
 
     if(of.is_open())
     {
-        for(int i=0; std::getline(of, line); ++i)
+        for(int j=0; std::getline(of, line); ++j)
         {
-            while(map_layer1.size() <= i)
-                map_layer1.push_back(std::vector<char> ());
-
-        }
-        of.close();
-    }
-
-    of.clear();
-    of.open(getContext().oFile + L1_SUFFIX);
-    if(of.is_open())
-    {
-        for(int i=0; std::getline(of, line); ++i)
-        {
-            for(int j=0; j < line.size(); ++j)
-                map_layer1[map_layer1.size() - i - 1].push_back(line[j]);
+            for(int i=0; i < line.size(); ++i)
+            {
+                if(line[i] != ' ')
+                {
+                    map_layer1.add(line[i], i, j);
+                }
+            }
         }
         of.close();
     }
@@ -123,28 +106,72 @@ deleting(false)
     of.clear();
     of.open(getContext().oFile + W_SUFFIX);
     line = "";
-    bool hashDelimeter = false;
 
     if(of.is_open())
     {
         // find delimeter, parse symbols
         do
         {
-            std:getline(of, line);
-            if(line[0] == "#")
+            std::getline(of, line);
+            if(line[0] == '#')
             {
-                hashDelimeter = true;
                 break;
             }
-            wmap.push_back(line[0]);
+            wm.addWaypoint(line[0]);
         }while(line != "");
-        // location parsing
-        if(hashDelimiter)
+
+        // get adjacent
+        of.close();
+        of.clear();
+        of.open(getContext().oFile + W_SUFFIX);
+        line = "";
+        do
         {
-            for(int i=0; std::getline(of, line); ++i)
+            std::getline(of, line);
+            if(line[0] == '#')
             {
+                break;
+            }
+            char current = line[0];
+            for(int i=1; i < line.size(); ++i)
+            {
+                if(line[i] == ' ')
+                    continue;
+                wm.makeAdjacent(current, line[i]);
+            }
+        }while(line != "");
+
+        // location parsing
+        for(int j=0; std::getline(of, line); ++j)
+        {
+            for(int i=0; i < line.size(); ++i)
+            {
+                if(line[i] != ' ')
+                {
+                    map_waypoint.add(line[i], i, j);
+                }
             }
         }
+        of.close();
+    }
+
+    // parse obstacles
+    of.clear();
+    of.open(getContext().oFile + O_SUFFIX);
+    line = "";
+    if(of.is_open())
+    {
+        for(int j=0; std::getline(of,line); ++j)
+        {
+            for(int i=0; i < line.size(); ++i)
+            {
+                if(line[i] != ' ')
+                {
+                    map_obstacles.add('o', i, j);
+                }
+            }
+        }
+        of.close();
     }
 
     // other initializations
@@ -176,12 +203,13 @@ deleting(false)
     cView.move(0,-600.f);
     getContext().window->setView(cView);
 
-    printf("\nKMap contents:\n");
-    for(int i = 0; i < kmap.size(); ++i)
-        printf("%c",kmap[i]);
-    printf("\n");
-
-}
+    std::cout << "\nkmap contents:\n";
+    for(auto iter = kmap.begin(); iter != kmap.end(); ++iter)
+    {
+        std::cout << iter->first;
+    }
+    std::cout << "\n";
+   }
 
 void EditState::draw()
 {
@@ -200,6 +228,7 @@ void EditState::draw()
     
 
     int left,top;
+/*
     for(int y=0; y < map_layer0.size(); ++y)
         for(int x=0; x < map_layer0[y].size(); ++x)
             for(int u=0; u < kmap.size(); ++u)
@@ -212,6 +241,21 @@ void EditState::draw()
                     getContext().window->draw(sheet);
                     break;
                 }
+*/
+
+    for(int y=0; y < map_layer0.getMaxSize().second; ++y)
+    {
+        auto row = map_layer0.getRow(y);
+        for(auto rowIter = row.begin(); rowIter != row.end(); ++rowIter)
+        {
+            auto pair = kmap.find(rowIter->obj)->second;
+            left = pair.first * tsize;
+            top = pair.second * tsize;
+            sheet.setTextureRect(sf::IntRect(left, top, tsize, tsize));
+            sheet.setPosition(rowIter->x * tsize, rowIter->y * tsize);
+            getContext().window->draw(sheet);
+        }
+    }
 
     for(float y=t + 600.f; y >= t; y-=(float)tsize)
         for(float x=l; x <= l + 800.f; x+=(float)tsize)
@@ -269,11 +313,13 @@ bool EditState::update()
 
     if(deleting)
     {
-        char selChar = ' ';
         sf::Vector2i mpos = sf::Mouse::getPosition(*(getContext().window));
         sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
         int x = (int)(gpos.x / tsize);
         int y = -(int)(gpos.y / tsize);
+
+        map_layer0.remove(x,y);
+        /*
         if(y >= 0 && y < map_layer0.size() && x >= 0 && x < map_layer0[y].size())
         {
             while(map_layer0[y].size() <= x)
@@ -282,26 +328,31 @@ bool EditState::update()
             }
             map_layer0[y][x] = selChar;
         }
+        */
     }
     else if(drawing)
     {
-        char selChar = kmap[selection.y * width + selection.x];
+        char selChar = ' ';
+        for(auto kiter = kmap.begin(); kiter != kmap.end(); ++kiter)
+        {
+            if(kiter->second.first == selection.x && kiter->second.second == selection.y)
+            {
+                selChar = kiter->first;
+                break;
+            }
+        }
+        if(selChar == ' ') // TODO: DEBUG
+            std::cout << "WARNING: selChar IS ' ', selection is [" << selection.x << "," << selection.y << "]\n";
+
         sf::Vector2i mpos = sf::Mouse::getPosition(*(getContext().window));
         sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
         int x = (int)(gpos.x / tsize);
         int y = -(int)(gpos.y / tsize);
-        //printf("%d,%d\n",x,y);
-        if(y >= 0 && x >= 0)
+        if(y >= 0 && x >= 0 && selChar != ' ')
         {
-            while(map_layer0.size() <= y)
-            {
-                map_layer0.push_back(std::vector<char>());
-            }
-            while(map_layer0[y].size() <= x)
-            {
-                map_layer0[y].push_back(' ');
-            }
-            map_layer0[y][x] = selChar;
+            if(map_layer0.get(x,y) != NULL)
+                map_layer0.remove(x,y);
+            map_layer0.add(selChar, x, y);
         }
     }
 
@@ -322,8 +373,8 @@ bool EditState::update()
     {
         if(event.type == sf::Event::MouseButtonPressed)
         {
-            selection.x = (unsigned int) (event.mouseButton.x / (float)tsize);
-            selection.y = (unsigned int) (event.mouseButton.y / (float)tsize);
+            selection.x = (int) (event.mouseButton.x / (float)tsize);
+            selection.y = (int) (event.mouseButton.y / (float)tsize);
         }
     }
     return true;
@@ -346,9 +397,9 @@ bool EditState::handleEvent(const sf::Event& event)
         if(!of.is_open())
         {
             of.clear();
-            of.open(getContext().oFile, std::ios::out);
+            of.open(getContext().oFile + L0_SUFFIX, std::ios::out);
             of.close();
-            of.open(getContext().oFile, std::ios::trunc | std::ios::out);
+            of.open(getContext().oFile + L0_SUFFIX, std::ios::trunc | std::ios::out);
         }
 
 /*
@@ -362,11 +413,26 @@ bool EditState::handleEvent(const sf::Event& event)
                 of << '\n';
         }
 */
+/*
         for(auto y = map_layer0.rbegin(); y != map_layer0.rend(); ++y)
         {
             for(auto x = (*y).begin(); x != (*y).end(); ++x)
             {
                 of << *x;
+            }
+            of << '\n';
+        }
+*/
+
+        for(int y = map_layer0.getMaxSize().second - 1; y >= 0; --y)
+        {
+            for(int x=0; x < map_layer0.getMaxSize().first; ++x)
+            {
+                char* c = map_layer0.get(x,y);
+                if(c == NULL)
+                    of << ' ';
+                else
+                    of << (*c);
             }
             of << '\n';
         }
