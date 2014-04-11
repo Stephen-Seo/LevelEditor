@@ -32,6 +32,7 @@ deleting(false)
     }
 
     std::string line;
+    std::getline(ks, line);
 
     for(int j=0; std::getline(ks, line); ++j)
     {
@@ -69,7 +70,14 @@ deleting(false)
 
     if(of.is_open())
     {
-        for(int j=0; std::getline(of, line); ++j)
+        int y;
+        for(y=0 ; std::getline(of,line); ++y);
+
+        of.close();
+        of.clear();
+        of.open(getContext().oFile + L0_SUFFIX);
+
+        for(int j=y-1; std::getline(of, line); --j)
         {
             for(int i=0; i < line.size(); ++i)
             {
@@ -252,7 +260,7 @@ void EditState::draw()
             left = pair.first * tsize;
             top = pair.second * tsize;
             sheet.setTextureRect(sf::IntRect(left, top, tsize, tsize));
-            sheet.setPosition(rowIter->x * tsize, rowIter->y * tsize);
+            sheet.setPosition(rowIter->x * tsize, -rowIter->y * tsize - tsize);
             getContext().window->draw(sheet);
         }
     }
@@ -294,7 +302,6 @@ void EditState::draw()
 
 bool EditState::update()
 {
-
     // Begin main update
     int l = (int)( getContext().window->getView().getCenter().x -
                    getContext().window->getView().getSize().x / 2.f);
@@ -318,6 +325,7 @@ bool EditState::update()
         int x = (int)(gpos.x / tsize);
         int y = -(int)(gpos.y / tsize);
 
+        std::cout << "[" << x << "," << y << "]\n";
         map_layer0.remove(x,y);
         /*
         if(y >= 0 && y < map_layer0.size() && x >= 0 && x < map_layer0[y].size())
