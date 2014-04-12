@@ -88,3 +88,8 @@ When saving, the program will overwrite the following files:
 [prefix]_level_layer1  
 [prefix]_waypoint  
 [prefix]_obstacles
+
+
+# Exiting the program
+
+Close the map window. The program will then close both windows and exit.
