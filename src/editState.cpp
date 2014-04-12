@@ -846,6 +846,7 @@ bool EditState::handleEvent(const sf::Event& event)
     }
     else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space)
     {
+        linkSelection.x = -1;
         switch(currentMode)
         {
         case Mode::layer0:
@@ -874,7 +875,8 @@ bool EditState::handleEvent(const sf::Event& event)
             break;
         }
     }
-    else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::L)
+    else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::L
+        && currentMode == Mode::waypoint)
     {
         sf::Vector2i mpos = sf::Mouse::getPosition(*(getContext().window));
         sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
