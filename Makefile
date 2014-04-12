@@ -1,5 +1,5 @@
 CXX = g++ -W -Wall -Wextra -pedantic -std=c++0x
-CFLAGS = -c -g
+CFLAGS = -c
 INCLUDE =
 LINK = -lsfml-graphics -lsfml-window -lsfml-system
 BINDIR = bin
