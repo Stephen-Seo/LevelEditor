@@ -87,8 +87,9 @@ A/D (in entities mode) changes the symbol that is drawn.
 
 In layer0/layer1 mode, you place the tiles in the layer specified.  
 In waypoint mode, you place waypoints.  
-Hover over a waypoint, hit 'L', hover over another waypoint, hit 'L' again to set/unset waypoint adjacency.
-In obstacles mode, you place obstacles (determines what the player cannot walk through).
+Hover over a waypoint, hit 'L', hover over another waypoint, hit 'L' again to set/unset waypoint adjacency.  
+In obstacles mode, you place obstacles (determines what the player cannot walk through).  
+In entities mode, you can place multiple entities (represented by symbols) into the world.
 
 When saving, the program will overwrite the following files:  
 \[prefix\]\_level\_layer0  
