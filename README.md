@@ -77,7 +77,7 @@ Right click deletes the object.
 L (in waypoint mode) links a waypoint to another waypoint.  
 
 
-Hover over a waypoint, hit 'L', over over another waypoint, hit 'L' again to set/unset waypoint adjacency.
+Hover over a waypoint, hit 'L', hover over another waypoint, hit 'L' again to set/unset waypoint adjacency.
 
 In layer0/layer1 mode, you place the tiles in the layer specified.  
 In waypoint mode, you place waypoints.  
