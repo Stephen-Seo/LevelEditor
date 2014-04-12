@@ -11,11 +11,14 @@ validChars("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@$%^&
 wm(),
 map_waypoint(),
 map_obstacles(),
+map_entities(),
 selection(0,0),
 drawing(false),
 deleting(false),
 adjLine(sf::LinesStrip, 2),
-linkSelection(-1,-1)
+linkSelection(-1,-1),
+eSymbolSelection(0),
+entitySymbol("Hi",getContext().fonts->get(Fonts::ClearSans),10) 
 {
     sheet.setTexture(getContext().textures->get(Textures::TileSheet));
 
@@ -206,6 +209,32 @@ linkSelection(-1,-1)
         of.close();
     }
 
+    // parse entities
+    of.clear();
+    of.open(getContext().oFile + E_SUFFIX);
+    line = "";
+    if(of.is_open())
+    {
+        int y;
+        for(y=0; std::getline(of,line); ++y);
+
+        of.close();
+        of.clear();
+        of.open(getContext().oFile + E_SUFFIX);
+
+        for(int j=y-1; std::getline(of,line); --j)
+        {
+            for(int i=0; i < line.size(); ++i)
+            {
+                if(line[i] != ' ')
+                {
+                    map_entities.add(line[i], i, j);
+                }
+            }
+        }
+        of.close();
+    }
+
     // other initializations
     width = isize.x / tsize;
     std::cout << "width is " << width << "\n";
@@ -245,6 +274,9 @@ linkSelection(-1,-1)
 
     adjLine[0].color = sf::Color::Red;
     adjLine[1].color = sf::Color::Red;
+
+    entitySymbol.setCharacterSize((unsigned int) tsize);
+    entitySymbol.setStyle(sf::Text::Regular);
 
     std::cout << "\nkmap contents:\n";
     for(auto iter = kmap.begin(); iter != kmap.end(); ++iter)
@@ -391,6 +423,24 @@ void EditState::draw()
         }
     }
 
+    // draw entities
+    if(currentMode == Mode::entities)
+    {
+        for(int j=0; j < map_entities.getMaxSize().second; ++j)
+        {
+            for(int i=0; i < map_entities.getMaxSize().first; ++i)
+            {
+                char* c = map_entities.get(i,j);
+                if(c != NULL)
+                {
+                    entitySymbol.setString(*c);
+                    entitySymbol.setPosition((float)(i * tsize), (float)(-j * tsize - tsize));
+                    getContext().window->draw(entitySymbol);
+                }
+            }
+        }
+    }
+
     // draw grid
     for(float y=t + 600.f; y >= t; y-=(float)tsize)
         for(float x=l; x <= l + 800.f; x+=(float)tsize)
@@ -417,13 +467,21 @@ void EditState::draw()
 
     // Begin drawing for twindow
     getContext().twindow->clear(sf::Color(127,127,127));
-    sheet.setTextureRect(sf::IntRect(0,0,isize.x,isize.y));
-    sheet.setPosition(0.f,0.f);
-    getContext().twindow->draw(sheet);
+    if(currentMode != Mode::entities)
+    {
+        sheet.setTextureRect(sf::IntRect(0,0,isize.x,isize.y));
+        sheet.setPosition(0.f,0.f);
+        getContext().twindow->draw(sheet);
 
-    sHighlight.setPosition((float)(selection.x * tsize),(float)(selection.y * tsize));
-    getContext().twindow->draw(sHighlight);
-
+        sHighlight.setPosition((float)(selection.x * tsize),(float)(selection.y * tsize));
+        getContext().twindow->draw(sHighlight);
+    }
+    else
+    {
+        entitySymbol.setString(validChars[eSymbolSelection]);
+        entitySymbol.setPosition(0.0f, 0.0f);
+        getContext().twindow->draw(entitySymbol);
+    }
     getContext().twindow->display();
 }
 
@@ -467,6 +525,8 @@ bool EditState::update()
         }
         else if(currentMode == Mode::obstacles)
             map_obstacles.remove(x,y);
+        else if(currentMode == Mode::entities)
+            map_entities.remove(x,y);
         /*
         if(y >= 0 && y < map_layer0.size() && x >= 0 && x < map_layer0[y].size())
         {
@@ -489,8 +549,6 @@ bool EditState::update()
                 break;
             }
         }
-        if(selChar == ' ') // TODO: DEBUG
-            std::cout << "WARNING: selChar IS ' ', selection is [" << selection.x << "," << selection.y << "]\n";
 
         sf::Vector2i mpos = sf::Mouse::getPosition(*(getContext().window));
         sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
@@ -533,6 +591,12 @@ bool EditState::update()
             else if(currentMode == Mode::obstacles)
             {
                 map_obstacles.add('o', x, y);
+            }
+            else if(currentMode == Mode::entities)
+            {
+                if(map_entities.get(x,y) != NULL)
+                    map_entities.remove(x,y);
+                map_entities.add(validChars[eSymbolSelection], x, y);
             }
         }
     }
@@ -715,6 +779,36 @@ bool EditState::handleEvent(const sf::Event& event)
         of.flush();
         of.close();
 
+        // write entities
+        of.clear();
+        of.open(getContext().oFile + E_SUFFIX, std::ios::trunc | std::ios::out);
+        if(!of.is_open())
+        {
+            of.clear();
+            of.open(getContext().oFile + E_SUFFIX, std::ios::out);
+            of.close();
+            of.open(getContext().oFile + E_SUFFIX, std::ios::trunc | std::ios::out);
+        }
+
+        for(int j = my; j > map_entities.getMaxSize().second; --j)
+            of << '\n';
+        for(int y = map_entities.getMaxSize().second - 1; y >= 0; --y)
+        {
+            for(int x=0; x < map_entities.getMaxSize().first; ++x)
+            {
+                char* c = map_entities.get(x,y);
+                if(c == NULL)
+                    of << ' ';
+                else
+                    of << *c;
+            }
+            of << '\n';
+        }
+
+        of.flush();
+        of.close();
+        
+
         saveIndicator.setFillColor(sf::Color::White);
     }
 
@@ -767,6 +861,10 @@ bool EditState::handleEvent(const sf::Event& event)
             getContext().twindow->setTitle("obstacles");
             break;
         case Mode::obstacles:
+            currentMode = Mode::entities;
+            getContext().twindow->setTitle("entities");
+            break;
+        case Mode::entities:
             currentMode = Mode::layer0;
             getContext().twindow->setTitle("layer0");
             break;
@@ -808,6 +906,16 @@ bool EditState::handleEvent(const sf::Event& event)
                 linkSelection.x = -1;
             }
         }
+    }
+    else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::A)
+    {
+        if(--eSymbolSelection < 0)
+            eSymbolSelection = validChars.size() - 1;
+    }
+    else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::D)
+    {
+        if(++eSymbolSelection >= validChars.size())
+            eSymbolSelection = 0;
     }
 
     return true;

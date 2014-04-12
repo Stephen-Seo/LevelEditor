@@ -19,6 +19,7 @@
 #define L1_SUFFIX "_level_layer1"
 #define W_SUFFIX "_waypoint"
 #define O_SUFFIX "_obstacles"
+#define E_SUFFIX "_entities"
 
 class EditState : public State
 {
@@ -31,7 +32,7 @@ public:
 private:
     enum Mode
     {
-        layer0, layer1, waypoint, obstacles
+        layer0, layer1, waypoint, obstacles, entities
     };
 
     Mode currentMode;
@@ -45,6 +46,8 @@ private:
     CoordinateMap<char> map_waypoint;
 
     CoordinateMap<char> map_obstacles;
+
+    CoordinateMap<char> map_entities;
 
     sf::Sprite sheet;
 
@@ -68,6 +71,9 @@ private:
 
     sf::VertexArray adjLine;
     sf::Vector2i linkSelection;
+
+    int eSymbolSelection;
+    sf::Text entitySymbol;
 
     sf::View cView;
 };

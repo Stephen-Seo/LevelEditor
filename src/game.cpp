@@ -1,6 +1,14 @@
 
 #include "game.hpp"
 
+#if defined(_WIN32)
+#define CS_PATH "..\\resources\\ClearSans-Regular.ttf"
+#elif defined(__WIN32__)
+#define CS_PATH "..\\resources\\ClearSans-Regular.ttf"
+#else
+#define CS_PATH "../resources/ClearSans-Regular.ttf"
+#endif
+
 Game::Game(std::string oFile, std::string imgFile)
 : window(sf::VideoMode(800,600), "SFML App"),
 twindow(),
@@ -10,6 +18,14 @@ stateStack(State::Context(window, twindow, textureHolder, fontHolder, oFile))
 {
     window.setFramerateLimit(60);
     textureHolder.load(Textures::TileSheet, imgFile);
+    try{
+        fontHolder.load(Fonts::ClearSans, "ClearSans-Regular.ttf");
+    } catch(std::runtime_error e)
+    {
+        std::cout << "Failed to load font in run location.\n";
+        std::cout << "checking ../resources\n";
+        fontHolder.load(Fonts::ClearSans, CS_PATH);
+    }
 
     registerStates();
 
