@@ -23,7 +23,7 @@ stateStack(State::Context(window, twindow, textureHolder, fontHolder, oFile))
     } catch(std::runtime_error e)
     {
         std::cout << "Failed to load font in run location.\n";
-        std::cout << "checking ../resources\n";
+        std::cout << "checking " << CS_PATH << "\n";
         fontHolder.load(Fonts::ClearSans, CS_PATH);
     }
 
