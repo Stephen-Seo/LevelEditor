@@ -24,7 +24,7 @@ The files in question should be named:
 \[prefix\]\_level\_layer0  
 \[prefix\]\_level\_layer1  
 \[prefix\]\_waypoint  
-\[prefix\]\_obstacles
+\[prefix\]\_obstacles  
 \[prefix\]\_entities
 
 (\[prefix\] is defined at runtime by the user.)
