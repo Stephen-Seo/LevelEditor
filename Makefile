@@ -7,7 +7,8 @@ SOURCES = \
         src/game.o \
         src/stateStack.o \
         src/state.o \
-        src/editState.o
+        src/editState.o \
+        src/waypoint.o
 
 all: $(BINDIR) $(BINDIR)/LevelEditor
 
