@@ -452,8 +452,6 @@ bool EditState::update()
         int x = (int)(gpos.x / tsize);
         int y = -(int)(gpos.y / tsize);
 
-        std::cout << "[" << x << "," << y << "]\n";
-
         if(currentMode == Mode::layer0)
             map_layer0.remove(x,y);
         else if(currentMode == Mode::layer1)
