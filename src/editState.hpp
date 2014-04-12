@@ -40,6 +40,7 @@ private:
     CoordinateMap<char> map_layer0;
     CoordinateMap<char> map_layer1;
 
+    std::string validChars;
     WaypointManager wm;
     CoordinateMap<char> map_waypoint;
 
@@ -56,9 +57,11 @@ private:
     bool drawing;
     bool deleting;
 
+    sf::CircleShape waypointMarker;
     sf::CircleShape sHighlight;
     sf::CircleShape grid;
 
+    sf::RectangleShape obstacleIndicator;
     sf::RectangleShape saveIndicator;
     sf::RectangleShape leftIndicator;
     sf::RectangleShape topIndicator;

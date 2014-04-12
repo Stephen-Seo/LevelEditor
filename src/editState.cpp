@@ -5,6 +5,7 @@ EditState::EditState(StateStack& stack, Context context)
 : State(stack, context),
 currentMode(Mode::layer0),
 kmap(),
+validChars("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()-_=+[]{}|;:',./<>?"),
 wm(),
 map_layer0(),
 selection(0,0),
@@ -61,7 +62,7 @@ deleting(false)
     ks.close();
 
     // create window for selecting tiles
-    getContext().twindow->create(sf::VideoMode(isize.x,isize.y), "TileSheet");
+    getContext().twindow->create(sf::VideoMode(isize.x,isize.y), "layer0");
 
     // parse layer 0
     std::fstream of;
@@ -97,7 +98,14 @@ deleting(false)
 
     if(of.is_open())
     {
-        for(int j=0; std::getline(of, line); ++j)
+        int y;
+        for(y=0; std::getline(of,line); ++y);
+
+        of.close();
+        of.clear();
+        of.open(getContext().oFile + L1_SUFFIX);
+
+        for(int j=y-1; std::getline(of, line); --j)
         {
             for(int i=0; i < line.size(); ++i)
             {
@@ -128,6 +136,10 @@ deleting(false)
             wm.addWaypoint(line[0]);
         }while(line != "");
 
+        // get height of map
+        int y;
+        for(y=0; std::getline(of, line); ++y);
+
         // get adjacent
         of.close();
         of.clear();
@@ -150,7 +162,7 @@ deleting(false)
         }while(line != "");
 
         // location parsing
-        for(int j=0; std::getline(of, line); ++j)
+        for(int j=y-1; std::getline(of, line); --j)
         {
             for(int i=0; i < line.size(); ++i)
             {
@@ -169,7 +181,14 @@ deleting(false)
     line = "";
     if(of.is_open())
     {
-        for(int j=0; std::getline(of,line); ++j)
+        int y;
+        for(y=0; std::getline(of,line); ++y);
+
+        of.close();
+        of.clear();
+        of.open(getContext().oFile + O_SUFFIX);
+
+        for(int j=y-1; std::getline(of,line); --j)
         {
             for(int i=0; i < line.size(); ++i)
             {
@@ -186,10 +205,18 @@ deleting(false)
     width = isize.x / tsize;
     std::cout << "width is " << width << "\n";
 
+    waypointMarker.setFillColor(sf::Color(255,255,255,50));
+    waypointMarker.setOutlineColor(sf::Color::Blue);
+    waypointMarker.setOutlineThickness(1.f);
+    waypointMarker.setRadius(tsize/2.f);
+
     sHighlight.setFillColor(sf::Color(255,255,255,50));
     sHighlight.setOutlineColor(sf::Color::Red);
     sHighlight.setOutlineThickness(1.f);
     sHighlight.setRadius(tsize/2.f);
+
+    obstacleIndicator.setSize(sf::Vector2f((float)tsize,(float)tsize));
+    obstacleIndicator.setFillColor(sf::Color(0,0,0,100));
 
     saveIndicator.setSize(sf::Vector2f(800.f,600.f));
     saveIndicator.setFillColor(sf::Color(255,255,255,0));
@@ -236,35 +263,76 @@ void EditState::draw()
     
 
     int left,top;
-/*
-    for(int y=0; y < map_layer0.size(); ++y)
-        for(int x=0; x < map_layer0[y].size(); ++x)
-            for(int u=0; u < kmap.size(); ++u)
-                if(map_layer0[y][x] != ' ' && kmap[u] == map_layer0[y][x])
-                {
-                    left = (u % width) * tsize;
-                    top = (u / width) * tsize;
-                    sheet.setTextureRect(sf::IntRect(left,top,tsize,tsize));
-                    sheet.setPosition(x*tsize, -y*(int)tsize - (int)tsize);
-                    getContext().window->draw(sheet);
-                    break;
-                }
-*/
 
-    for(int y=0; y < map_layer0.getMaxSize().second; ++y)
+    // draw layer0
+    if(currentMode != Mode::layer1)
     {
-        auto row = map_layer0.getRow(y);
-        for(auto rowIter = row.begin(); rowIter != row.end(); ++rowIter)
+        for(int y=0; y < map_layer0.getMaxSize().second; ++y)
         {
-            auto pair = kmap.find(rowIter->obj)->second;
-            left = pair.first * tsize;
-            top = pair.second * tsize;
-            sheet.setTextureRect(sf::IntRect(left, top, tsize, tsize));
-            sheet.setPosition(rowIter->x * tsize, -rowIter->y * tsize - tsize);
-            getContext().window->draw(sheet);
+            auto row = map_layer0.getRow(y);
+            for(auto rowIter = row.begin(); rowIter != row.end(); ++rowIter)
+            {
+                auto pair = kmap.find(rowIter->obj)->second;
+                left = pair.first * tsize;
+                top = pair.second * tsize;
+                sheet.setTextureRect(sf::IntRect(left, top, tsize, tsize));
+                sheet.setPosition(rowIter->x * tsize, -rowIter->y * tsize - tsize);
+                getContext().window->draw(sheet);
+            }
         }
     }
 
+    // draw layer1
+    if(currentMode != Mode::layer0)
+    {
+        for(int y=0; y < map_layer1.getMaxSize().second; ++y)
+        {
+            auto row = map_layer1.getRow(y);
+            for(auto rowIter = row.begin(); rowIter != row.end(); ++rowIter)
+            {
+                auto pair = kmap.find(rowIter->obj)->second;
+                left = pair.first * tsize;
+                top = pair.second * tsize;
+                sheet.setTextureRect(sf::IntRect(left, top, tsize, tsize));
+                sheet.setPosition(rowIter->x * tsize, -rowIter->y * tsize - tsize);
+                getContext().window->draw(sheet);
+            }
+        }
+    }
+
+    // draw waypoints
+    if(currentMode == Mode::waypoint)
+    {
+        for(int j=0; j < map_waypoint.getMaxSize().second; ++j)
+        {
+            for(int i=0; i < map_waypoint.getMaxSize().first; ++i)
+            {
+                if(map_waypoint.get(i,j) != NULL)
+                {
+                    waypointMarker.setPosition((float)(i * tsize),(float)(-j * tsize - tsize));
+                    getContext().window->draw(waypointMarker);
+                }
+            }
+        }
+    }
+
+    // draw obstacles
+    if(currentMode == Mode::obstacles)
+    {
+        for(int j=0; j < map_obstacles.getMaxSize().second; ++j)
+        {
+            for(int i=0; i < map_obstacles.getMaxSize().first; ++i)
+            {
+                if(map_obstacles.get(i,j) != NULL)
+                {
+                    obstacleIndicator.setPosition((float)(i * tsize),(float)(-j * tsize - tsize));
+                    getContext().window->draw(obstacleIndicator);
+                }
+            }
+        }
+    }
+
+    // draw grid
     for(float y=t + 600.f; y >= t; y-=(float)tsize)
         for(float x=l; x <= l + 800.f; x+=(float)tsize)
         {
@@ -326,7 +394,22 @@ bool EditState::update()
         int y = -(int)(gpos.y / tsize);
 
         std::cout << "[" << x << "," << y << "]\n";
-        map_layer0.remove(x,y);
+
+        if(currentMode == Mode::layer0)
+            map_layer0.remove(x,y);
+        else if(currentMode == Mode::layer1)
+            map_layer1.remove(x,y);
+        else if(currentMode == Mode::waypoint)
+        {
+            char* waypointChar = map_waypoint.get(x,y);
+            if(waypointChar != NULL)
+            {
+                wm.removeWaypoint(*waypointChar);
+                map_waypoint.remove(x,y);
+            }
+        }
+        else if(currentMode == Mode::obstacles)
+            map_obstacles.remove(x,y);
         /*
         if(y >= 0 && y < map_layer0.size() && x >= 0 && x < map_layer0[y].size())
         {
@@ -356,11 +439,44 @@ bool EditState::update()
         sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
         int x = (int)(gpos.x / tsize);
         int y = -(int)(gpos.y / tsize);
-        if(y >= 0 && x >= 0 && selChar != ' ')
+        if(y >= 0 && x >= 0)
         {
-            if(map_layer0.get(x,y) != NULL)
-                map_layer0.remove(x,y);
-            map_layer0.add(selChar, x, y);
+            if(currentMode == Mode::layer0 && selChar != ' ')
+            {
+                if(map_layer0.get(x,y) != NULL)
+                    map_layer0.remove(x,y);
+                map_layer0.add(selChar, x, y);
+            }
+            else if(currentMode == Mode::layer1 && selChar != ' ')
+            {
+                if(map_layer1.get(x,y) != NULL)
+                    map_layer1.remove(x,y);
+                map_layer1.add(selChar, x, y);
+            }
+            else if(currentMode == Mode::waypoint)
+            {
+                if(map_waypoint.get(x,y) == NULL)
+                {
+                    int i;
+                    for(i=0; i < validChars.size(); ++i)
+                    {
+                        if(wm.getCurrentChars().find(validChars[i]) == std::string::npos)
+                        {
+                            selChar = validChars[i];
+                            break;
+                        }
+                    }
+                    if(i != validChars.size())
+                    {
+                        map_waypoint.add(selChar, x, y);
+                        wm.addWaypoint(selChar);
+                    }
+                }
+            }
+            else if(currentMode == Mode::obstacles)
+            {
+                map_obstacles.add('o', x, y);
+            }
         }
     }
 
@@ -400,7 +516,20 @@ bool EditState::handleEvent(const sf::Event& event)
         deleting = false;
     else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Return)
     {
+        // get max height
+        int my=0;
+        if(map_layer0.getMaxSize().second > my)
+            my = map_layer0.getMaxSize().second;
+        if(map_layer1.getMaxSize().second > my)
+            my = map_layer1.getMaxSize().second;
+        if(map_waypoint.getMaxSize().second > my)
+            my = map_waypoint.getMaxSize().second;
+        if(map_obstacles.getMaxSize().second > my)
+            my = map_obstacles.getMaxSize().second;
+
         std::fstream of;
+
+        // write layer0
         of.open(getContext().oFile + L0_SUFFIX, std::ios::trunc | std::ios::out);
         if(!of.is_open())
         {
@@ -410,28 +539,8 @@ bool EditState::handleEvent(const sf::Event& event)
             of.open(getContext().oFile + L0_SUFFIX, std::ios::trunc | std::ios::out);
         }
 
-/*
-        for(int y=0; y<map_layer0.size(); ++y)
-        {
-            for(int x=0; x<map_layer0[y].size(); ++x)
-            {
-                of << map_layer0[y][x];
-            }
-            if(y != map_layer0.size()-1)
-                of << '\n';
-        }
-*/
-/*
-        for(auto y = map_layer0.rbegin(); y != map_layer0.rend(); ++y)
-        {
-            for(auto x = (*y).begin(); x != (*y).end(); ++x)
-            {
-                of << *x;
-            }
+        for(int j = my; j > map_layer0.getMaxSize().second; --j)
             of << '\n';
-        }
-*/
-
         for(int y = map_layer0.getMaxSize().second - 1; y >= 0; --y)
         {
             for(int x=0; x < map_layer0.getMaxSize().first; ++x)
@@ -441,6 +550,107 @@ bool EditState::handleEvent(const sf::Event& event)
                     of << ' ';
                 else
                     of << (*c);
+            }
+            of << '\n';
+        }
+
+        of.flush();
+        of.close();
+
+        // write layer1
+        of.clear();
+        of.open(getContext().oFile + L1_SUFFIX, std::ios::trunc | std::ios::out);
+        if(!of.is_open())
+        {
+            of.clear();
+            of.open(getContext().oFile + L1_SUFFIX, std::ios::out);
+            of.close();
+            of.open(getContext().oFile + L1_SUFFIX, std::ios::trunc | std::ios::out);
+        }
+
+        for(int j = my; j > map_layer1.getMaxSize().second; --j)
+            of << '\n';
+        for(int y = map_layer1.getMaxSize().second - 1; y >= 0; --y)
+        {
+            for(int x=0; x < map_layer1.getMaxSize().first; ++x)
+            {
+                char* c = map_layer1.get(x,y);
+                if(c == NULL)
+                    of << ' ';
+                else
+                    of << (*c);
+            }
+            of << '\n';
+        }
+
+        of.flush();
+        of.close();
+
+        // write waypoints
+        of.clear();
+        of.open(getContext().oFile + W_SUFFIX, std::ios::trunc | std::ios::out);
+        if(!of.is_open())
+        {
+            of.clear();
+            of.open(getContext().oFile + W_SUFFIX, std::ios::out);
+            of.close();
+            of.open(getContext().oFile + W_SUFFIX, std::ios::trunc | std::ios::out);
+        }
+
+        std::string usedChars = wm.getCurrentChars();
+        for(int i=0; i < usedChars.size(); ++i)
+        {
+            of << usedChars[i] << ' ';
+            Waypoint* waypoint = wm.getWaypoint(usedChars[i]);
+            for(auto iter = waypoint->adjacent.begin(); iter != waypoint->adjacent.end(); ++iter)
+            {
+                of << (*iter)->symbol << ' ';
+            }
+            of << '\n';
+        }
+
+        of << "#\n";
+
+        for(int j = my; j > map_waypoint.getMaxSize().second; --j)
+            of << '\n';
+        for(int y = map_waypoint.getMaxSize().second - 1; y >= 0; --y)
+        {
+            for(int x=0; x < map_waypoint.getMaxSize().first; ++x)
+            {
+                char* c = map_waypoint.get(x,y);
+                if(c == NULL)
+                    of << ' ';
+                else
+                    of << (*c);
+            }
+            of << '\n';
+        }
+
+        of.flush();
+        of.close();
+
+        // write obstacles
+        of.clear();
+        of.open(getContext().oFile + O_SUFFIX, std::ios::trunc | std::ios::out);
+        if(!of.is_open())
+        {
+            of.clear();
+            of.open(getContext().oFile + O_SUFFIX, std::ios::out);
+            of.close();
+            of.open(getContext().oFile + O_SUFFIX, std::ios::trunc | std::ios::out);
+        }
+
+        for(int j = my; j > map_obstacles.getMaxSize().second; --j)
+            of << '\n';
+        for(int y = map_obstacles.getMaxSize().second - 1; y >= 0; --y)
+        {
+            for(int x=0; x < map_obstacles.getMaxSize().first; ++x)
+            {
+                char* c = map_obstacles.get(x,y);
+                if(c == NULL)
+                    of << ' ';
+                else
+                    of << 'o';
             }
             of << '\n';
         }
@@ -482,6 +692,32 @@ bool EditState::handleEvent(const sf::Event& event)
         cView.setCenter(getContext().window->getView().getCenter());
         cView.move(0,(float)tsize);
         getContext().window->setView(cView);
+    }
+    else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space)
+    {
+        switch(currentMode)
+        {
+        case Mode::layer0:
+            currentMode = Mode::layer1;
+            getContext().twindow->setTitle("layer1");
+            break;
+        case Mode::layer1:
+            currentMode = Mode::waypoint;
+            getContext().twindow->setTitle("waypoint");
+            break;
+        case Mode::waypoint:
+            currentMode = Mode::obstacles;
+            getContext().twindow->setTitle("obstacles");
+            break;
+        case Mode::obstacles:
+            currentMode = Mode::layer0;
+            getContext().twindow->setTitle("layer0");
+            break;
+        default:
+            currentMode = Mode::layer0;
+            getContext().twindow->setTitle("layer0");
+            break;
+        }
     }
 
     return true;

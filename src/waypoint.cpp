@@ -82,3 +82,13 @@ bool WaypointManager::unmakeAdjacent(const char& s0, const char& s1)
     wp1->adjacent.erase(wp0);
     return true;
 }
+
+std::string WaypointManager::getCurrentChars()
+{
+    std::string list;
+    for(auto iter = waypoints.begin(); iter != waypoints.end(); ++iter)
+    {
+        list.append(1, iter->first);
+    }
+    return list;
+}

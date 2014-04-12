@@ -27,6 +27,7 @@ public:
     Waypoint* getWaypoint(const char& symbol);
     bool makeAdjacent(const char& s0, const char& s1);
     bool unmakeAdjacent(const char& s0, const char& s1);
+    std::string getCurrentChars();
 private:
     std::map<char,Waypoint> waypoints;
 };
