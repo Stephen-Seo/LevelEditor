@@ -69,14 +69,14 @@ It can be "tiles.png" for example.
 First select the map window.
 The title of the small window tells you what "mode" you are in.
 
-Arrow keys move the view.
-Spacebar changes the mode.
-Enter saves the map.
-Left click places an object.
+Arrow keys move the view.  
+Spacebar changes the mode.  
+Enter saves the map.  
+Left click places an object.  
 Right click deletes the object.
 
-In layer0/layer1 mode, you place the tiles in the layer specified.
-In waypoint mode, you place waypoints.
+In layer0/layer1 mode, you place the tiles in the layer specified.  
+In waypoint mode, you place waypoints.  
 In obstacles mode, you place obstacles (determines what the player cannot walk through).
 
 When saving, the program will overwrite the following files:  
