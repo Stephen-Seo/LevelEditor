@@ -1,7 +1,7 @@
 CXX = g++ -W -Wall -Wextra -pedantic -std=c++0x
 CFLAGS = -c -g
-INCLUDE = -I/home/stephen/Downloads/SFML-latestish/include
-LINK = -L/home/stephen/Downloads/SFML-latestish/lib -lsfml-graphics -lsfml-window -lsfml-system
+INCLUDE =
+LINK = -lsfml-graphics -lsfml-window -lsfml-system
 BINDIR = bin
 SOURCES = \
         src/game.o \
@@ -12,8 +12,6 @@ SOURCES = \
 
 all: $(BINDIR) $(BINDIR)/LevelEditor
 
-test: tests/UnitTests
-
 $(BINDIR):
 		mkdir -p $(BINDIR)
 
@@ -23,7 +21,7 @@ $(BINDIR)/LevelEditor: $(SOURCES) src/main.o
 tests/UnitTests: $(SOURCES) src/unitTests.o
 		$(CXX) -o tests/UnitTests $(SOURCES) src/UnitTests.o $(LINK)
 
-clean:		src.clean tests.clean
+clean:		src.clean
 		rm -f $(BINDIR)/LevelEditor
 
 %.clean:
