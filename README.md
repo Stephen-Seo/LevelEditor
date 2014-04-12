@@ -15,13 +15,13 @@ A tile sheet image (preferably png), and a key file.
 The image may be named anything, but the program expects the keyfile (and
 other generated files) to follow a specific syntax.
 The files in question should be named:  
-<prefix>_key  
-<prefix>_level_layer0  
-<prefix>_level_layer1  
-<prefix>_waypoint  
-<prefix>_obstacles
+[prefix]_key  
+[prefix]_level_layer0  
+[prefix]_level_layer1  
+[prefix]_waypoint  
+[prefix]_obstacles
 
-(<prefix> is defined at runtime by the user.)
+([prefix] is defined at runtime by the user.)
 
 ## Keyfile format
 
@@ -55,13 +55,13 @@ a specific tile/obstacle (in the obstacles file, obstacles are denoted with
 run the LevelEditor binary in terminal/cmd/powershell.
 
 needs options:  
--p <prefix>  
--i <tilesheet>
+-p [prefix]  
+-i [tilesheet]
 
-<prefix> determines the prefix of the files to open.
+[prefix] determines the prefix of the files to open.
 The only file required to run is <prefix>_key.
 
-<tilesheet> determines the tilesheet to open.
+[tilesheet] determines the tilesheet to open.
 It can be "tiles.png" for example.
 
 # Actual Usage
@@ -80,7 +80,7 @@ In waypoint mode, you place waypoints.
 In obstacles mode, you place obstacles (determines what the player cannot walk through).
 
 When saving, the program will overwrite the following files:  
-<prefix>_level_layer0  
-<prefix>_level_layer1  
-<prefix>_waypoint  
-<prefix>_obstacles
+[prefix]_level_layer0  
+[prefix]_level_layer1  
+[prefix]_waypoint  
+[prefix]_obstacles
