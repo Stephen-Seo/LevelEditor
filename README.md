@@ -1,5 +1,11 @@
-
 Note: the program is meant to be started from the terminal/cmd/powershell
+
+# Compiling
+
+The program requires SFML 2.1 and uses some C++11 code.
+If you have not installed SFML 2.1 to your system, you may alter the
+Makefile using the -I and -L options so that your compiler can find
+the required lib and include directories.
 
 # Required Files
 
