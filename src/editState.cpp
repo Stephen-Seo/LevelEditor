@@ -5,12 +5,17 @@ EditState::EditState(StateStack& stack, Context context)
 : State(stack, context),
 currentMode(Mode::layer0),
 kmap(),
+map_layer0(),
+map_layer1(),
 validChars("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()-_=+[]{}|;:',./<>?"),
 wm(),
-map_layer0(),
+map_waypoint(),
+map_obstacles(),
 selection(0,0),
 drawing(false),
-deleting(false)
+deleting(false),
+adjLine(sf::LinesStrip, 2),
+linkSelection(-1,-1)
 {
     sheet.setTexture(getContext().textures->get(Textures::TileSheet));
 
@@ -238,13 +243,16 @@ deleting(false)
     cView.move(0,-600.f);
     getContext().window->setView(cView);
 
+    adjLine[0].color = sf::Color::Red;
+    adjLine[1].color = sf::Color::Red;
+
     std::cout << "\nkmap contents:\n";
     for(auto iter = kmap.begin(); iter != kmap.end(); ++iter)
     {
         std::cout << iter->first;
     }
     std::cout << "\n";
-   }
+}
 
 void EditState::draw()
 {
@@ -313,6 +321,57 @@ void EditState::draw()
                     getContext().window->draw(waypointMarker);
                 }
             }
+        }
+
+        // Drawing existing edges
+        std::set<std::pair<Waypoint,Waypoint> > edges = wm.getEdges();
+        for(auto iter = edges.begin(); iter != edges.end(); ++iter)
+        {
+            char a = iter->first.symbol;
+            char b = iter->second.symbol;
+
+            sf::Vector2i aCoords(-1,-1);
+            sf::Vector2i bCoords(-1,-1);
+
+            for(int j=0; j < map_waypoint.getMaxSize().second; ++j)
+            {
+                auto row = map_waypoint.getRow(j);
+                for(auto riter = row.begin(); riter != row.end(); ++riter)
+                {
+                    if(riter->obj == a)
+                    {
+                        aCoords.x = riter->x;
+                        aCoords.y = riter->y;
+                    }
+                    else if(riter->obj == b)
+                    {
+                        bCoords.x = riter->x;
+                        bCoords.y = riter->y;
+                    }
+                    if(aCoords.x != -1 && bCoords.x != -1)
+                        break;
+                }
+                if(aCoords.x != -1 && bCoords.x != -1)
+                    break;
+            }
+
+            adjLine[0].position.x = (float) (aCoords.x * tsize) + ((float)tsize)/2.0f;
+            adjLine[0].position.y = (float) (-aCoords.y * tsize) - ((float)tsize)/2.0f;
+            adjLine[1].position.x = (float) (bCoords.x * tsize) + ((float)tsize)/2.0f;
+            adjLine[1].position.y = (float) (-bCoords.y * tsize) - ((float)tsize)/2.0f;
+            getContext().window->draw(adjLine);
+        }
+
+        // Drawing new connection to mouse
+        if(linkSelection.x != -1)
+        {
+            sf::Vector2i mpos = sf::Mouse::getPosition(*(getContext().window));
+            sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
+
+            adjLine[0].position.x = (float) (linkSelection.x * tsize) + ((float)tsize)/2.0f;
+            adjLine[0].position.y = (float) (-linkSelection.y * tsize) - ((float)tsize)/2.0f;
+            adjLine[1].position = gpos;
+            getContext().window->draw(adjLine);
         }
     }
 
@@ -717,6 +776,39 @@ bool EditState::handleEvent(const sf::Event& event)
             currentMode = Mode::layer0;
             getContext().twindow->setTitle("layer0");
             break;
+        }
+    }
+    else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::L)
+    {
+        sf::Vector2i mpos = sf::Mouse::getPosition(*(getContext().window));
+        sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
+        int x = (int)(gpos.x / tsize);
+        int y = -(int)(gpos.y / tsize);
+
+        char* selChar = map_waypoint.get(x,y);
+        if(selChar == NULL)
+        {
+            linkSelection.x = -1;
+        }
+        else
+        {
+            if(linkSelection.x == -1)
+            {
+                linkSelection.x = x;
+                linkSelection.y = y;
+            }
+            else
+            {
+                char* prevChar = map_waypoint.get(linkSelection.x, linkSelection.y);
+                if((*selChar) != (*prevChar))
+                {
+                    if(!wm.isAdjacent(*prevChar, *selChar))
+                        wm.makeAdjacent(*prevChar, *selChar);
+                    else
+                        wm.unmakeAdjacent(*prevChar, *selChar);
+                }
+                linkSelection.x = -1;
+            }
         }
     }
 

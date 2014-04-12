@@ -27,7 +27,9 @@ public:
     Waypoint* getWaypoint(const char& symbol);
     bool makeAdjacent(const char& s0, const char& s1);
     bool unmakeAdjacent(const char& s0, const char& s1);
+    bool isAdjacent(const char& s0, const char& s1);
     std::string getCurrentChars();
+    std::set<std::pair<Waypoint,Waypoint> > getEdges();
 private:
     std::map<char,Waypoint> waypoints;
 };

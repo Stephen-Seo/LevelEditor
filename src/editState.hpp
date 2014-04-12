@@ -66,6 +66,9 @@ private:
     sf::RectangleShape leftIndicator;
     sf::RectangleShape topIndicator;
 
+    sf::VertexArray adjLine;
+    sf::Vector2i linkSelection;
+
     sf::View cView;
 };
 
