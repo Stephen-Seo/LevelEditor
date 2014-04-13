@@ -32,7 +32,7 @@ public:
 private:
     enum Mode
     {
-        layer0, layer1, waypoint, obstacles, entities
+        layer0, layer1, waypoint, obstacles, entities, ewconnect
     };
 
     Mode currentMode;
@@ -48,6 +48,7 @@ private:
     CoordinateMap<char> map_obstacles;
 
     CoordinateMap<char> map_entities;
+    std::map<char, std::set<char> > ewmap;
 
     sf::Sprite sheet;
 
@@ -71,6 +72,9 @@ private:
 
     sf::VertexArray adjLine;
     sf::Vector2i linkSelection;
+
+    sf::VertexArray ewLine;
+    sf::Vector2i entitySelection;
 
     int eSymbolSelection;
     sf::Text entitySymbol;

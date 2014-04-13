@@ -12,11 +12,14 @@ wm(),
 map_waypoint(),
 map_obstacles(),
 map_entities(),
+ewmap(),
 selection(0,0),
 drawing(false),
 deleting(false),
 adjLine(sf::LinesStrip, 2),
 linkSelection(-1,-1),
+ewLine(sf::LinesStrip, 2),
+entitySelection(-1,-1),
 eSymbolSelection(0),
 entitySymbol("Hi",getContext().fonts->get(Fonts::ClearSans),10) 
 {
@@ -215,6 +218,22 @@ entitySymbol("Hi",getContext().fonts->get(Fonts::ClearSans),10)
     line = "";
     if(of.is_open())
     {
+        // parse connections until delimeter is reached
+        while(std::getline(of,line))
+        {
+            if(line[0] == '#')
+                break;
+
+            ewmap.insert(std::pair<char,std::set<char> >(line[0], std::set<char>()));
+            for(int i=1; i < line.size(); ++i)
+            {
+                if(line[i] == ' ')
+                    continue;
+                ewmap[line[0]].insert(line[i]);
+            }
+        }
+
+        // get height
         int y;
         for(y=0; std::getline(of,line); ++y);
 
@@ -222,6 +241,10 @@ entitySymbol("Hi",getContext().fonts->get(Fonts::ClearSans),10)
         of.clear();
         of.open(getContext().oFile + E_SUFFIX);
 
+        // reset to just past delimeter
+        while(std::getline(of,line) && line[0] != '#');
+
+        // parse entities
         for(int j=y-1; std::getline(of,line); --j)
         {
             for(int i=0; i < line.size(); ++i)
@@ -274,6 +297,9 @@ entitySymbol("Hi",getContext().fonts->get(Fonts::ClearSans),10)
 
     adjLine[0].color = sf::Color::Red;
     adjLine[1].color = sf::Color::Red;
+
+    ewLine[0].color = sf::Color::Blue;
+    ewLine[1].color = sf::Color::Blue;
 
     entitySymbol.setCharacterSize((unsigned int) tsize);
     entitySymbol.setStyle(sf::Text::Regular);
@@ -341,7 +367,7 @@ void EditState::draw()
     }
 
     // draw waypoints
-    if(currentMode == Mode::waypoint)
+    if(currentMode == Mode::waypoint || currentMode == Mode::ewconnect)
     {
         for(int j=0; j < map_waypoint.getMaxSize().second; ++j)
         {
@@ -424,7 +450,7 @@ void EditState::draw()
     }
 
     // draw entities
-    if(currentMode == Mode::entities)
+    if(currentMode == Mode::entities || currentMode == Mode::ewconnect)
     {
         for(int j=0; j < map_entities.getMaxSize().second; ++j)
         {
@@ -438,6 +464,74 @@ void EditState::draw()
                     getContext().window->draw(entitySymbol);
                 }
             }
+        }
+    }
+
+    // draw entity waypoint connections
+    if(currentMode == Mode::ewconnect)
+    {
+        for(auto iter = ewmap.begin(); iter != ewmap.end(); ++iter)
+        {
+            char entity = iter->first;
+            for(auto liter = iter->second.begin(); liter != iter->second.end(); ++liter)
+            {
+                char waypoint = *liter;
+                sf::Vector2i ecoords(-1,-1);
+                sf::Vector2i wcoords(-1,-1);
+
+                // TODO make following more efficient
+                std::list<RowEntry<char> > row;
+                for(int j=0; j < map_entities.getMaxSize().second; ++j)
+                {
+                    row = map_entities.getRow(j);
+                    for(auto riter = row.begin(); riter != row.end(); ++riter)
+                    {
+                        if(riter->obj == entity)
+                        {
+                            ecoords.x = riter->x;
+                            ecoords.y = riter->y;
+                            break;
+                        }
+                    }
+                    if(ecoords.x != -1)
+                        break;
+                }
+
+                for(int j=0; j < map_waypoint.getMaxSize().second; ++j)
+                {
+                    row = map_waypoint.getRow(j);
+                    for(auto riter = row.begin(); riter != row.end(); ++riter)
+                    {
+                        if(riter->obj == waypoint)
+                        {
+                            wcoords.x = riter->x;
+                            wcoords.y = riter->y;
+                            break;
+                        }
+                    }
+                    if(wcoords.x != -1)
+                        break;
+                }
+
+                ewLine[0].position.x = ((float) ecoords.x * tsize) + ((float)tsize)/2.0f;
+                ewLine[0].position.y = ((float) -ecoords.y * tsize) - ((float)tsize)/2.0f;
+                ewLine[1].position.x = ((float) wcoords.x * tsize) + ((float)tsize)/2.0f;
+                ewLine[1].position.y = ((float) -wcoords.y * tsize) - ((float)tsize)/2.0f;
+                
+                getContext().window->draw(ewLine);
+            }
+        }
+
+        if(entitySelection.x != -1)
+        {
+            sf::Vector2i mpos = sf::Mouse::getPosition(*(getContext().window));
+            sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
+
+            ewLine[0].position.x = (float) (entitySelection.x * tsize) + ((float)tsize)/2.0f;
+            ewLine[0].position.y = (float) (-entitySelection.y * tsize) - ((float)tsize)/2.0f;
+            ewLine[1].position = gpos;
+
+            getContext().window->draw(ewLine);
         }
     }
 
@@ -526,7 +620,14 @@ bool EditState::update()
         else if(currentMode == Mode::obstacles)
             map_obstacles.remove(x,y);
         else if(currentMode == Mode::entities)
-            map_entities.remove(x,y);
+        {
+            char* entity = map_entities.get(x,y);
+            if(entity != NULL)
+            {
+                ewmap.erase(*entity);
+                map_entities.remove(x,y);
+            }
+        }
         /*
         if(y >= 0 && y < map_layer0.size() && x >= 0 && x < map_layer0[y].size())
         {
@@ -790,6 +891,19 @@ bool EditState::handleEvent(const sf::Event& event)
             of.open(getContext().oFile + E_SUFFIX, std::ios::trunc | std::ios::out);
         }
 
+        for(auto iter = ewmap.begin(); iter != ewmap.end(); ++iter)
+        {
+            char c = iter->first;
+            of << c << " ";
+            for(auto liter = iter->second.begin(); liter != iter->second.end(); ++liter)
+            {
+                of << *liter << " ";
+            }
+            of << '\n';
+        }
+
+        of << "#\n";
+
         for(int j = my; j > map_entities.getMaxSize().second; --j)
             of << '\n';
         for(int y = map_entities.getMaxSize().second - 1; y >= 0; --y)
@@ -866,6 +980,10 @@ bool EditState::handleEvent(const sf::Event& event)
             getContext().twindow->setTitle("entities");
             break;
         case Mode::entities:
+            currentMode = Mode::ewconnect;
+            getContext().twindow->setTitle("entity_waypoint_connect");
+            break;
+        case Mode::ewconnect:
             currentMode = Mode::layer0;
             getContext().twindow->setTitle("layer0");
             break;
@@ -875,37 +993,68 @@ bool EditState::handleEvent(const sf::Event& event)
             break;
         }
     }
-    else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::L
-        && currentMode == Mode::waypoint)
+    else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::L)
     {
         sf::Vector2i mpos = sf::Mouse::getPosition(*(getContext().window));
         sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
         int x = (int)(gpos.x / tsize);
         int y = -(int)(gpos.y / tsize);
 
-        char* selChar = map_waypoint.get(x,y);
-        if(selChar == NULL)
+        if(currentMode == Mode::waypoint)
         {
-            linkSelection.x = -1;
-        }
-        else
-        {
-            if(linkSelection.x == -1)
+            char* selChar = map_waypoint.get(x,y);
+            if(selChar == NULL)
             {
-                linkSelection.x = x;
-                linkSelection.y = y;
+                linkSelection.x = -1;
             }
             else
             {
-                char* prevChar = map_waypoint.get(linkSelection.x, linkSelection.y);
-                if((*selChar) != (*prevChar))
+                if(linkSelection.x == -1)
                 {
-                    if(!wm.isAdjacent(*prevChar, *selChar))
-                        wm.makeAdjacent(*prevChar, *selChar);
-                    else
-                        wm.unmakeAdjacent(*prevChar, *selChar);
+                    linkSelection.x = x;
+                    linkSelection.y = y;
                 }
-                linkSelection.x = -1;
+                else
+                {
+                    char* prevChar = map_waypoint.get(linkSelection.x, linkSelection.y);
+                    if((*selChar) != (*prevChar))
+                    {
+                        if(!wm.isAdjacent(*prevChar, *selChar))
+                            wm.makeAdjacent(*prevChar, *selChar);
+                        else
+                            wm.unmakeAdjacent(*prevChar, *selChar);
+                    }
+                    linkSelection.x = -1;
+                }
+            }
+        }
+        else if(currentMode == Mode::ewconnect)
+        {
+            if(entitySelection.x == -1)
+            {
+                char* selChar = map_entities.get(x,y);
+                if(selChar != NULL)
+                {
+                    entitySelection.x = x;
+                    entitySelection.y = y;
+                }
+            }
+            else
+            {
+                char* selChar = map_waypoint.get(x,y);
+                if(selChar == NULL)
+                {
+                    entitySelection.x = -1;
+                }
+                else
+                {
+                    char* prevChar = map_entities.get(entitySelection.x, entitySelection.y);
+                    if(ewmap[*prevChar].find(*selChar) == ewmap[*prevChar].end())
+                        ewmap[*prevChar].insert(*selChar);
+                    else
+                        ewmap[*prevChar].erase(*selChar);
+                    entitySelection.x = -1;
+                }
             }
         }
     }
