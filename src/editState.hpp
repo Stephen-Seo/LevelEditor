@@ -14,12 +14,12 @@
 
 #include "coordinateMap.hpp"
 
-#define K_SUFFIX "_key"
-#define L0_SUFFIX "_level_layer0"
-#define L1_SUFFIX "_level_layer1"
-#define W_SUFFIX "_waypoint"
-#define O_SUFFIX "_obstacles"
-#define E_SUFFIX "_entities"
+#define K_SUFFIX "_key.txt"
+#define L0_SUFFIX "_level_layer0.txt"
+#define L1_SUFFIX "_level_layer1.txt"
+#define W_SUFFIX "_waypoint.txt"
+#define O_SUFFIX "_obstacles.txt"
+#define E_SUFFIX "_entities.txt"
 
 class EditState : public State
 {
