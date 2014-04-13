@@ -20,12 +20,12 @@ A tile sheet image (preferably png), and a key file.
 The image may be named anything, but the program expects the keyfile (and
 other generated files) to follow a specific syntax.
 The files in question should be named:  
-\[prefix\]\_key  
-\[prefix\]\_level\_layer0  
-\[prefix\]\_level\_layer1  
-\[prefix\]\_waypoint  
-\[prefix\]\_obstacles  
-\[prefix\]\_entities
+\[prefix\]\_key.txt  
+\[prefix\]\_level\_layer0.txt  
+\[prefix\]\_level\_layer1.txt  
+\[prefix\]\_waypoint.txt  
+\[prefix\]\_obstacles.txt  
+\[prefix\]\_entities.txt
 
 (\[prefix\] is defined at runtime by the user.)
 
@@ -65,7 +65,7 @@ needs options:
 -i \[tilesheet\]
 
 \[prefix\] determines the prefix of the files to open.
-The only file required to run is \[prefix\]\_key.
+The only file required to run is \[prefix\]\_key.txt.
 
 \[tilesheet\] determines the tilesheet to open.
 It can be "tiles.png" for example.
@@ -92,11 +92,11 @@ In obstacles mode, you place obstacles (determines what the player cannot walk t
 In entities mode, you can place multiple entities (represented by symbols) into the world.
 
 When saving, the program will overwrite the following files:  
-\[prefix\]\_level\_layer0  
-\[prefix\]\_level\_layer1  
-\[prefix\]\_waypoint  
-\[prefix\]\_obstacles  
-\[prefix\]\_entities
+\[prefix\]\_level\_layer0.txt  
+\[prefix\]\_level\_layer1.txt  
+\[prefix\]\_waypoint.txt  
+\[prefix\]\_obstacles.txt  
+\[prefix\]\_entities.txt
 
 
 # Exiting the program
