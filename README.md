@@ -48,13 +48,19 @@ adjacency list until a '#' is reached. Following the '#' is a literal
 map of characters that define where the waypoints are. Spaces denote
 empty space while symbols denote a specific waypoint.
 
+## Entites format
+
+The entity text file has a symbol representing an entity followed by symbols
+that represent connected waypoints. This continues line per line until '#'
+is reached. Following the '# is a literal map of characters that define where
+the entities are. Spaces denote empty space while symbols denote entities.
+
 ## Level/Obstacles format
 
 The contents of these text files is a literal map of characters that define
 where the tiles/obstacles are. Spaces denote empty space while symbols denote
 a specific tile/obstacle (in the obstacles file, obstacles are denoted with
 'o').
-
 
 # Usage
 
@@ -81,6 +87,8 @@ Enter saves the map.
 Left click places an object.  
 Right click deletes the object.  
 L (in waypoint mode) links a waypoint to another waypoint.  
+L (in entity\_waypoint\_connect mode) links an entity to a waypoint.  
+(one must select an entity first, then a waypoint)  
 A/D (in entities mode) changes the symbol that is drawn.
 
 
@@ -89,7 +97,10 @@ In layer0/layer1 mode, you place the tiles in the layer specified.
 In waypoint mode, you place waypoints.  
 Hover over a waypoint, hit 'L', hover over another waypoint, hit 'L' again to set/unset waypoint adjacency.  
 In obstacles mode, you place obstacles (determines what the player cannot walk through).  
-In entities mode, you can place multiple entities (represented by symbols) into the world.
+In entities mode, you can place multiple entities (represented by symbols) into the world.  
+In entity\_waypoint\_connect mode, you connect entities to waypoints. If connecting with an entity
+that has multiple instances of it, the editor may snap the lines to one of the duplicate entities,
+but that type of entity is connected to all the waypoints set to that type.
 
 When saving, the program will overwrite the following files:  
 \[prefix\]\_level\_layer0.txt  
