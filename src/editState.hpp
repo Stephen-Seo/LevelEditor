@@ -48,7 +48,7 @@ private:
     CoordinateMap<char> map_obstacles;
 
     CoordinateMap<char> map_entities;
-    std::map<char, std::set<char> > ewmap;
+    std::map<char, std::list<char> > ewmap;
 
     sf::Sprite sheet;
 

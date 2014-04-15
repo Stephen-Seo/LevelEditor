@@ -224,12 +224,12 @@ entitySymbol("Hi",getContext().fonts->get(Fonts::ClearSans),10)
             if(line[0] == '#')
                 break;
 
-            ewmap.insert(std::pair<char,std::set<char> >(line[0], std::set<char>()));
+            ewmap.insert(std::pair<char,std::list<char> >(line[0], std::list<char>()));
             for(int i=1; i < line.size(); ++i)
             {
                 if(line[i] == ' ')
                     continue;
-                ewmap[line[0]].insert(line[i]);
+                ewmap[line[0]].push_back(line[i]);
             }
         }
 
@@ -615,6 +615,17 @@ bool EditState::update()
             {
                 wm.removeWaypoint(*waypointChar);
                 map_waypoint.remove(x,y);
+                for(auto iter = ewmap.begin(); iter != ewmap.end(); ++iter)
+                {
+                    for(auto liter = iter->second.begin(); liter != iter->second.end(); ++liter)
+                    {
+                        if(*liter == *waypointChar)
+                        {
+                            iter->second.erase(liter);
+                            break;
+                        }
+                    }
+                }
             }
         }
         else if(currentMode == Mode::obstacles)
@@ -1049,10 +1060,21 @@ bool EditState::handleEvent(const sf::Event& event)
                 else
                 {
                     char* prevChar = map_entities.get(entitySelection.x, entitySelection.y);
-                    if(ewmap[*prevChar].find(*selChar) == ewmap[*prevChar].end())
-                        ewmap[*prevChar].insert(*selChar);
-                    else
-                        ewmap[*prevChar].erase(*selChar);
+                    bool contains = false;
+                    for(auto liter = ewmap[*prevChar].begin(); liter != ewmap[*prevChar].end(); ++liter)
+                    {
+                        if(*liter == *selChar)
+                        {
+                            contains = true;
+                            ewmap[*prevChar].erase(liter);
+                            break;
+                        }
+                    }
+                    if(!contains)
+                    {
+                        ewmap[*prevChar].push_back(*selChar);
+                    }
+
                     entitySelection.x = -1;
                 }
             }
