@@ -21,7 +21,10 @@ linkSelection(-1,-1),
 ewLine(sf::LinesStrip, 2),
 entitySelection(-1,-1),
 eSymbolSelection(0),
-entitySymbol("Hi",getContext().fonts->get(Fonts::ClearSans),10) 
+entitySymbol("Hi",getContext().fonts->get(Fonts::ClearSans),10),
+warpSymbol("Derp",getContext().fonts->get(Fonts::ClearSans),10),
+warpLine(sf::LinesStrip, 2),
+warpSelection(NULL)
 {
     sheet.setTexture(getContext().textures->get(Textures::TileSheet));
 
@@ -258,6 +261,56 @@ entitySymbol("Hi",getContext().fonts->get(Fonts::ClearSans),10)
         of.close();
     }
 
+    // parse warps
+    of.clear();
+    of.open(getContext().oFile + WA_SUFFIX);
+    line = "";
+    if(of.is_open())
+    {
+        while(std::getline(of,line))
+        {
+            if(line[0] == '#')
+                break;
+
+            char warp = line[0];
+
+            unsigned long space0 = line.find_first_of(" ");
+            unsigned long space1 = line.find_first_of(" ",space0+1);
+            if(space0 == std::string::npos || space1 == std::string::npos)
+            {
+                throw std::runtime_error("Invalid warps file detected.");
+            }
+
+            std::string substring = line.substr(space0+1,space1-space0-1);
+            int coord0 = std::stoi(substring);
+            substring = line.substr(space1+1, std::string::npos);
+            int coord1 = std::stoi(substring);
+
+            warp_destinations.add(warp, coord0, coord1);
+        }
+
+        int y;
+        for(y=0; std::getline(of,line); ++y);
+
+        of.close();
+        of.clear();
+        of.open(getContext().oFile + WA_SUFFIX);
+
+        while(std::getline(of,line) && line[0] != '#');
+
+        for(int j=y-1; std::getline(of,line); --j)
+        {
+            for(int i=0; i < line.size(); ++i)
+            {
+                if(line[i] != ' ')
+                {
+                    map_warps.add(line[i], i, j);
+                }
+            }
+        }
+        of.close();
+    }
+
     // other initializations
     width = isize.x / tsize;
     std::cout << "width is " << width << "\n";
@@ -303,6 +356,13 @@ entitySymbol("Hi",getContext().fonts->get(Fonts::ClearSans),10)
 
     entitySymbol.setCharacterSize((unsigned int) tsize);
     entitySymbol.setStyle(sf::Text::Regular);
+
+    warpSymbol.setCharacterSize((unsigned int) tsize);
+    warpSymbol.setStyle(sf::Text::Regular);
+    warpSymbol.setColor(sf::Color(30,255,30));
+
+    warpLine[0].color = sf::Color::Green;
+    warpLine[0].color = sf::Color::Green;
 
     std::cout << "\nkmap contents:\n";
     for(auto iter = kmap.begin(); iter != kmap.end(); ++iter)
@@ -535,6 +595,60 @@ void EditState::draw()
         }
     }
 
+    // draw warps
+    if(currentMode == Mode::warps)
+    {
+        for(int j=0; j < map_warps.getMaxSize().second; ++j)
+        {
+            for(int i=0; i < map_warps.getMaxSize().first; ++i)
+            {
+                char* c = map_warps.get(i,j);
+                if(c != NULL)
+                {
+                    warpSymbol.setString(*c);
+                    warpSymbol.setPosition((float)(i * tsize), (float)(-j * tsize - tsize));
+                    getContext().window->draw(warpSymbol);
+                }
+            }
+        }
+
+        if(warpSelection != NULL)
+        {
+            sf::Vector2i mpos = sf::Mouse::getPosition(*(getContext().window));
+            sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
+
+            auto coords = map_warps.get(*warpSelection);
+
+            if(coords.first == -1)
+                throw std::runtime_error("Unable to find existing warp coordinates.");
+
+            warpLine[0].position.x = (float) (coords.first * tsize) + ((float)tsize)/2.0f;
+            warpLine[0].position.y = (float) (-coords.second * tsize) - ((float)tsize)/2.0f;
+            warpLine[1].position = gpos;
+
+            getContext().window->draw(warpLine);
+        }
+
+        for(int j=0; j < warp_destinations.getMaxSize().second; ++j)
+        {
+            for(int i=0; i < warp_destinations.getMaxSize().first; ++i)
+            {
+                char* c = warp_destinations.get(i,j);
+                if(c != NULL)
+                {
+                    auto coords = map_warps.get(*c);
+
+                    warpLine[0].position.x = (float) (coords.first * tsize) + ((float)tsize)/2.0f;
+                    warpLine[0].position.y = (float) (-coords.second * tsize) - ((float)tsize)/2.0f;
+                    warpLine[1].position.x = (float) (i * tsize) + ((float)tsize)/2.0f;
+                    warpLine[1].position.y = (float) (-j * tsize) - ((float)tsize)/2.0f;
+
+                    getContext().window->draw(warpLine);
+                }
+            }
+        }
+    }
+
     // draw grid
     for(float y=t + 600.f; y >= t; y-=(float)tsize)
         for(float x=l; x <= l + 800.f; x+=(float)tsize)
@@ -561,7 +675,7 @@ void EditState::draw()
 
     // Begin drawing for twindow
     getContext().twindow->clear(sf::Color(127,127,127));
-    if(currentMode != Mode::entities)
+    if(currentMode != Mode::entities && currentMode != Mode::warps)
     {
         sheet.setTextureRect(sf::IntRect(0,0,isize.x,isize.y));
         sheet.setPosition(0.f,0.f);
@@ -570,11 +684,17 @@ void EditState::draw()
         sHighlight.setPosition((float)(selection.x * tsize),(float)(selection.y * tsize));
         getContext().twindow->draw(sHighlight);
     }
-    else
+    else if(currentMode == Mode::entities)
     {
         entitySymbol.setString(validChars[eSymbolSelection]);
         entitySymbol.setPosition(0.0f, 0.0f);
         getContext().twindow->draw(entitySymbol);
+    }
+    else if(currentMode == Mode::warps)
+    {
+        warpSymbol.setString(validChars[eSymbolSelection]);
+        warpSymbol.setPosition(0.0f, 0.0f);
+        getContext().twindow->draw(warpSymbol);
     }
     getContext().twindow->display();
 }
@@ -639,16 +759,15 @@ bool EditState::update()
                 map_entities.remove(x,y);
             }
         }
-        /*
-        if(y >= 0 && y < map_layer0.size() && x >= 0 && x < map_layer0[y].size())
+        else if(currentMode == Mode::warps)
         {
-            while(map_layer0[y].size() <= x)
+            char* w = map_warps.get(x,y);
+            if(w != NULL)
             {
-                map_layer0[y].push_back(' ');
+                warp_destinations.remove(*w);
+                map_warps.remove(x,y);
             }
-            map_layer0[y][x] = selChar;
         }
-        */
     }
     else if(drawing)
     {
@@ -709,6 +828,15 @@ bool EditState::update()
                 if(map_entities.get(x,y) != NULL)
                     map_entities.remove(x,y);
                 map_entities.add(validChars[eSymbolSelection], x, y);
+            }
+            else if(currentMode == Mode::warps)
+            {
+                if(map_warps.get(x,y) != NULL)
+                {
+                    map_warps.remove(x,y);
+                    warp_destinations.remove(x,y);
+                }
+                map_warps.add(validChars[eSymbolSelection], x, y);
             }
         }
     }
@@ -932,7 +1060,46 @@ bool EditState::handleEvent(const sf::Event& event)
 
         of.flush();
         of.close();
-        
+
+        // write warps
+        of.clear();
+        of.open(getContext().oFile + WA_SUFFIX, std::ios::trunc | std::ios::out);
+        if(!of.is_open())
+        {
+            of.clear();
+            of.open(getContext().oFile + WA_SUFFIX, std::ios::out);
+            of.close();
+            of.open(getContext().oFile + WA_SUFFIX, std::ios::trunc | std::ios::out);
+        }
+
+        for(int j=0; j < warp_destinations.getMaxSize().second; ++j)
+        {
+            auto row = warp_destinations.getRow(j);
+            for(auto riter = row.begin(); riter != row.end(); ++riter)
+            {
+                of << riter->obj << " " << riter->x << " " << riter->y << "\n";
+            }
+        }
+
+        of << "#\n";
+
+        for(int j = my; j > map_warps.getMaxSize().second; --j)
+            of << '\n';
+        for(int y = map_warps.getMaxSize().second - 1; y >= 0; --y)
+        {
+            for(int x=0; x < map_warps.getMaxSize().first; ++x)
+            {
+                char* c = map_warps.get(x,y);
+                if(c == NULL)
+                    of << ' ';
+                else
+                    of << *c;
+            }
+            of << '\n';
+        }
+
+        of.flush();
+        of.close();
 
         saveIndicator.setFillColor(sf::Color::White);
     }
@@ -972,6 +1139,7 @@ bool EditState::handleEvent(const sf::Event& event)
     else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space)
     {
         linkSelection.x = -1;
+        warpSelection = NULL;
         switch(currentMode)
         {
         case Mode::layer0:
@@ -995,6 +1163,10 @@ bool EditState::handleEvent(const sf::Event& event)
             getContext().twindow->setTitle("entity_waypoint_connect");
             break;
         case Mode::ewconnect:
+            currentMode = Mode::warps;
+            getContext().twindow->setTitle("warps");
+            break;
+        case Mode::warps:
             currentMode = Mode::layer0;
             getContext().twindow->setTitle("layer0");
             break;
@@ -1077,6 +1249,22 @@ bool EditState::handleEvent(const sf::Event& event)
 
                     entitySelection.x = -1;
                 }
+            }
+        }
+        else if(currentMode == Mode::warps)
+        {
+            if(warpSelection != NULL)
+            {
+                if(warp_destinations.get(*warpSelection).first != -1)
+                    warp_destinations.remove(*warpSelection);
+                warp_destinations.add(*warpSelection, x, y);
+                warpSelection = NULL;
+            }
+            else
+            {
+                char* selChar = map_warps.get(x,y);
+                if(selChar != NULL)
+                    warpSelection = selChar;
             }
         }
     }

@@ -20,6 +20,7 @@
 #define W_SUFFIX "_waypoint.txt"
 #define O_SUFFIX "_obstacles.txt"
 #define E_SUFFIX "_entities.txt"
+#define WA_SUFFIX "_warps.txt"
 
 class EditState : public State
 {
@@ -32,7 +33,7 @@ public:
 private:
     enum Mode
     {
-        layer0, layer1, waypoint, obstacles, entities, ewconnect
+        layer0, layer1, waypoint, obstacles, entities, ewconnect, warps
     };
 
     Mode currentMode;
@@ -49,6 +50,9 @@ private:
 
     CoordinateMap<char> map_entities;
     std::map<char, std::list<char> > ewmap;
+
+    CoordinateMap<char> map_warps;
+    CoordinateMap<char> warp_destinations;
 
     sf::Sprite sheet;
 
@@ -78,6 +82,11 @@ private:
 
     int eSymbolSelection;
     sf::Text entitySymbol;
+
+    sf::Text warpSymbol;
+
+    sf::VertexArray warpLine;
+    char* warpSelection;
 
     sf::View cView;
 };

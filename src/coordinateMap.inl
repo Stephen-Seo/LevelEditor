@@ -87,6 +87,38 @@ bool CoordinateMap<T>::remove(int x, int y)
 }
 
 template <class T>
+bool CoordinateMap<T>::remove(T obj)
+{
+    bool deletedFromRows = false;
+    bool deletedFromColumns = false;
+
+    for(auto riter = rows.begin(); riter != rows.end(); ++riter)
+    {
+        if(riter->second.obj == obj)
+        {
+            rows.erase(riter);
+            deletedFromRows = true;
+            break;
+        }
+    }
+
+    for(auto citer = columns.begin(); citer != columns.end(); ++citer)
+    {
+        if(citer->second.obj == obj)
+        {
+            columns.erase(citer);
+            deletedFromColumns = true;
+            break;
+        }
+    }
+
+    if(deletedFromRows || deletedFromColumns)
+        decrementCheckMaxVals();
+
+    return deletedFromRows && deletedFromColumns;
+}
+
+template <class T>
 T* CoordinateMap<T>::get(int x, int y)
 {
     for(auto riter = rows.find(y); riter != rows.end() && riter->first == y; ++riter)
@@ -97,6 +129,19 @@ T* CoordinateMap<T>::get(int x, int y)
         }
     }
     return NULL;
+}
+
+template <class T>
+std::pair<int,int> CoordinateMap<T>::get(T obj)
+{
+    for(auto riter = rows.begin(); riter != rows.end(); ++riter)
+    {
+        if(riter->second.obj == obj)
+        {
+            return std::pair<int,int>(riter->second.x,riter->second.y);
+        }
+    }
+    return std::pair<int,int>(-1,-1);
 }
 
 template <class T>

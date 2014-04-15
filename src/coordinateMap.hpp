@@ -35,7 +35,9 @@ public:
 
     bool add(T obj, int x, int y);
     bool remove(int x, int y);
+    bool remove(T obj);
     T* get(int x, int y);
+    std::pair<int,int> get(T obj);
     std::list<ColumnEntry<T> > getColumn(int x);
     std::list<RowEntry<T> > getRow(int y);
     std::pair<int,int> getMaxSize();
