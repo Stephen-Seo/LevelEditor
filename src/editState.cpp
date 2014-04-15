@@ -282,9 +282,11 @@ warpSelection(NULL)
             }
 
             std::string substring = line.substr(space0+1,space1-space0-1);
-            int coord0 = std::stoi(substring);
+            int coord0;// = std::stoi(substring);
+            std::istringstream(substring) >> coord0;
             substring = line.substr(space1+1, std::string::npos);
-            int coord1 = std::stoi(substring);
+            int coord1;// = std::stoi(substring);
+            std::istringstream(substring) >> coord1;
 
             warp_destinations.add(warp, coord0, coord1);
         }
