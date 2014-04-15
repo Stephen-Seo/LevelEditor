@@ -370,6 +370,9 @@ warpSelection(NULL)
         std::cout << iter->first;
     }
     std::cout << "\n";
+
+    getContext().window->setPosition(sf::Vector2i(0,50));
+    getContext().twindow->setPosition(sf::Vector2i((int)getContext().window->getSize().x,50));
 }
 
 void EditState::draw()
