@@ -74,6 +74,9 @@ needs options:
 \[prefix\] determines the prefix of the files to open.
 The only file required to run is \[prefix\]\_key.txt.
 
+EXAMPLE: If your key file is "mapTest_key.txt",
+then your prefix should be "mapTest".
+
 \[tilesheet\] determines the tilesheet to open.
 It can be "tiles.png" for example.
 
