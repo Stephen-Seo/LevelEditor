@@ -54,11 +54,11 @@ private:
 
     CoordinateMap<char> map_warps;
     CoordinateMap<char> warp_destinations;
-	
-	CoordinateMap<char> map_doors;
-	CoordinateMap<char> map_keys;
-	std::map<char,char> dtok;
-	std::map<char,char> ktod;
+    
+    CoordinateMap<char> map_doors;
+    CoordinateMap<char> map_keys;
+    std::map<char,char> dtok;
+    std::map<char,char> ktod;
 
     sf::Sprite sheet;
 
@@ -90,9 +90,9 @@ private:
     sf::Text entitySymbol;
 
     sf::Text warpSymbol;
-	
-	sf::Text doorSymbol;
-	sf::Text keySymbol;
+    
+    sf::Text doorSymbol;
+    sf::Text keySymbol;
 
     sf::VertexArray warpLine;
     char* warpSelection;

@@ -23,6 +23,8 @@ entitySelection(-1,-1),
 eSymbolSelection(0),
 entitySymbol("Hi",getContext().fonts->get(Fonts::ClearSans),10),
 warpSymbol("Derp",getContext().fonts->get(Fonts::ClearSans),10),
+doorSymbol("Derp",getContext().fonts->get(Fonts::ClearSans),10),
+keySymbol("Derps",getContext().Fonts->get(Fonts::ClearSans),10),
 warpLine(sf::LinesStrip, 2),
 warpSelection(NULL)
 {
@@ -362,6 +364,14 @@ warpSelection(NULL)
     warpSymbol.setCharacterSize((unsigned int) tsize);
     warpSymbol.setStyle(sf::Text::Regular);
     warpSymbol.setColor(sf::Color(30,255,30));
+    
+    doorSymbol.setCharacterSize((unsigned int) tsize);
+    doorSymbol.setStyle(sf::Text::Regular);
+    doorSymbol.setColor(sf::Color(85,18,0));
+    
+    keySymbol.setCharacterSize((unsigned int) tsize);
+    keySymbol.setStyle(sf::Text::Regular);
+    keySymbol.setColor(sf::Color::Yellow);
 
     warpLine[0].color = sf::Color::Green;
     warpLine[0].color = sf::Color::Green;
