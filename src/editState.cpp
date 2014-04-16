@@ -655,8 +655,8 @@ void EditState::draw()
     }
 
     // draw grid
-    for(float y=t + 600.f; y >= t; y-=(float)tsize)
-        for(float x=l; x <= l + 800.f; x+=(float)tsize)
+    for(float y=t + getContext().window->getView().getSize().y; y >= t; y-=(float)tsize)
+        for(float x=l; x <= l + getContext().window->getView().getSize().x; x+=(float)tsize)
         {
             grid.setPosition(x,y);
             getContext().window->draw(grid);
@@ -1282,6 +1282,22 @@ bool EditState::handleEvent(const sf::Event& event)
     {
         if(++eSymbolSelection >= validChars.size())
             eSymbolSelection = 0;
+    }
+    else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Equal)
+    {
+        sf::View cView;
+        cView.setSize(getContext().window->getView().getSize());
+        cView.setCenter(getContext().window->getView().getCenter());
+        cView.zoom(0.5f);
+        getContext().window->setView(cView);
+    }
+    else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Dash)
+    {
+        sf::View cView;
+        cView.setSize(getContext().window->getView().getSize());
+        cView.setCenter(getContext().window->getView().getCenter());
+        cView.zoom(2.0f);
+        getContext().window->setView(cView);
     }
 
     return true;
