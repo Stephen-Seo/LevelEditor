@@ -25,7 +25,8 @@ The files in question should be named:
 \[prefix\]\_level\_layer1.txt  
 \[prefix\]\_waypoint.txt  
 \[prefix\]\_obstacles.txt  
-\[prefix\]\_entities.txt
+\[prefix\]\_entities.txt  
+\[prefix\]\_warps.txt
 
 (\[prefix\] is defined at runtime by the user.)
 
@@ -89,7 +90,9 @@ Right click deletes the object.
 L (in waypoint mode) links a waypoint to another waypoint.  
 L (in entity\_waypoint\_connect mode) links an entity to a waypoint.  
 (one must select an entity first, then a waypoint)  
-A/D (in entities mode) changes the symbol that is drawn.
+A/D (in entities mode) changes the symbol that is drawn.  
+L (in warps mode) picks a warp or sets a location for the selected warp to go to.  
+A/D (in warps mode) changes the symbol that is drawn
 
 
 
@@ -100,14 +103,16 @@ In obstacles mode, you place obstacles (determines what the player cannot walk t
 In entities mode, you can place multiple entities (represented by symbols) into the world.  
 In entity\_waypoint\_connect mode, you connect entities to waypoints. If connecting with an entity
 that has multiple instances of it, the editor may snap the lines to one of the duplicate entities,
-but that type of entity is connected to all the waypoints set to that type.
+but that type of entity is connected to all the waypoints set to that type.  
+In warps mode, one can create warps that have a designated location for the warp to go to.
 
 When saving, the program will overwrite the following files:  
 \[prefix\]\_level\_layer0.txt  
 \[prefix\]\_level\_layer1.txt  
 \[prefix\]\_waypoint.txt  
 \[prefix\]\_obstacles.txt  
-\[prefix\]\_entities.txt
+\[prefix\]\_entities.txt  
+\[prefix\]\_warps.txt
 
 
 # Exiting the program
