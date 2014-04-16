@@ -86,7 +86,7 @@ First select the map window.
 The title of the small window tells you what "mode" you are in.
 
 Arrow keys move the view.  
-Spacebar changes the mode.  
+Period and Comma (< and >) changes the mode.  
 Enter saves the map.  
 Left click places an object.  
 Right click deletes the object.  
