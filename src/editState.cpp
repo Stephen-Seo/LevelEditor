@@ -1141,7 +1141,7 @@ bool EditState::handleEvent(const sf::Event& event)
         cView.move(0,(float)tsize);
         getContext().window->setView(cView);
     }
-    else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space)
+    else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Period)
     {
         linkSelection.x = -1;
         warpSelection = NULL;
@@ -1174,6 +1174,46 @@ bool EditState::handleEvent(const sf::Event& event)
         case Mode::warps:
             currentMode = Mode::layer0;
             getContext().twindow->setTitle("layer0");
+            break;
+        default:
+            currentMode = Mode::layer0;
+            getContext().twindow->setTitle("layer0");
+            break;
+        }
+    }
+    else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Comma)
+    {
+        linkSelection.x = -1;
+        warpSelection = NULL;
+        switch(currentMode)
+        {
+        case Mode::layer0:
+            currentMode = Mode::warps;
+            getContext().twindow->setTitle("warps");
+            break;
+        case Mode::layer1:
+            currentMode = Mode::layer0;
+            getContext().twindow->setTitle("layer0");
+            break;
+        case Mode::waypoint:
+            currentMode = Mode::layer1;
+            getContext().twindow->setTitle("layer1");
+            break;
+        case Mode::obstacles:
+            currentMode = Mode::waypoint;
+            getContext().twindow->setTitle("waypoint");
+            break;
+        case Mode::entities:
+            currentMode = Mode::obstacles;
+            getContext().twindow->setTitle("obstacles");
+            break;
+        case Mode::ewconnect:
+            currentMode = Mode::entities;
+            getContext().twindow->setTitle("entities");
+            break;
+        case Mode::warps:
+            currentMode = Mode::ewconnect;
+            getContext().twindow->setTitle("entity_waypoint_connect");
             break;
         default:
             currentMode = Mode::layer0;
