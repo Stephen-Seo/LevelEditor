@@ -21,6 +21,7 @@
 #define O_SUFFIX "_obstacles.txt"
 #define E_SUFFIX "_entities.txt"
 #define WA_SUFFIX "_warps.txt"
+#define DK_SUFFIX "_doorkey.txt"
 
 class EditState : public State
 {
@@ -33,7 +34,7 @@ public:
 private:
     enum Mode
     {
-        layer0, layer1, waypoint, obstacles, entities, ewconnect, warps
+        layer0, layer1, waypoint, obstacles, entities, ewconnect, warps, door, key
     };
 
     Mode currentMode;
@@ -53,6 +54,11 @@ private:
 
     CoordinateMap<char> map_warps;
     CoordinateMap<char> warp_destinations;
+	
+	CoordinateMap<char> map_doors;
+	CoordinateMap<char> map_keys;
+	std::map<char,char> dtok;
+	std::map<char,char> ktod;
 
     sf::Sprite sheet;
 
@@ -84,6 +90,9 @@ private:
     sf::Text entitySymbol;
 
     sf::Text warpSymbol;
+	
+	sf::Text doorSymbol;
+	sf::Text keySymbol;
 
     sf::VertexArray warpLine;
     char* warpSelection;
