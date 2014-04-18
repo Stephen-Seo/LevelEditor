@@ -21,6 +21,7 @@
 #define O_SUFFIX "_obstacles.txt"
 #define E_SUFFIX "_entities.txt"
 #define WA_SUFFIX "_warps.txt"
+#define D_SUFFIX "_door.txt"
 #define DK_SUFFIX "_doorkey.txt"
 
 class EditState : public State
@@ -93,6 +94,9 @@ private:
     
     sf::Text doorSymbol;
     sf::Text keySymbol;
+
+    sf::VertexArray dkLine;
+    char* keySelection;
 
     sf::VertexArray warpLine;
     char* warpSelection;

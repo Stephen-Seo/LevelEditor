@@ -24,7 +24,9 @@ eSymbolSelection(0),
 entitySymbol("Hi",getContext().fonts->get(Fonts::ClearSans),10),
 warpSymbol("Derp",getContext().fonts->get(Fonts::ClearSans),10),
 doorSymbol("Derp",getContext().fonts->get(Fonts::ClearSans),10),
-keySymbol("Derps",getContext().Fonts->get(Fonts::ClearSans),10),
+keySymbol("Derps",getContext().fonts->get(Fonts::ClearSans),10),
+dkLine(sf::LinesStrip, 2),
+keySelection(NULL),
 warpLine(sf::LinesStrip, 2),
 warpSelection(NULL)
 {
@@ -315,6 +317,77 @@ warpSelection(NULL)
         of.close();
     }
 
+    // parse doors
+    of.clear();
+    of.open(getContext().oFile + D_SUFFIX);
+    line = "";
+    if(of.is_open())
+    {
+        int y;
+        for(y=0; std::getline(of,line); ++y);
+
+        of.close();
+        of.clear();
+        of.open(getContext().oFile + D_SUFFIX);
+
+        for(int j=y; std::getline(of,line); --j)
+        {
+            for(int i=0; i < line.size(); ++i)
+            {
+                if(line[i] != ' ')
+                {
+                    map_doors.add(line[i],i,j);
+                }
+            }
+        }
+
+        of.close();
+    }
+
+    // parse keys to doors
+    of.clear();
+    of.open(getContext().oFile + DK_SUFFIX);
+    line = "";
+    if(of.is_open())
+    {
+        while(std::getline(of,line))
+        {
+            if(line[0] == '#')
+                break;
+
+            for(int x=1; x < line.size(); ++x)
+            {
+                if(line[x] != ' ')
+                {
+                    ktod.insert(std::pair<char,char>(line[0],line[x]));
+                    dtok.insert(std::pair<char,char>(line[x],line[0]));
+                }
+            }
+        }
+
+        int y;
+        for(y=0; std::getline(of,line); ++y);
+
+        of.close();
+        of.clear();
+        of.open(getContext().oFile + DK_SUFFIX);
+
+        while(std::getline(of,line) && line[0] != '#');
+
+        for(int j=y; std::getline(of,line); --j)
+        {
+            for(int i=0; i < line.size(); ++i)
+            {
+                if(line[i] != ' ')
+                {
+                    map_keys.add(line[i],i,j);
+                }
+            }
+        }
+
+        of.close();
+    }
+
     // other initializations
     width = isize.x / tsize;
     std::cout << "width is " << width << "\n";
@@ -373,7 +446,9 @@ warpSelection(NULL)
     keySymbol.setStyle(sf::Text::Regular);
     keySymbol.setColor(sf::Color::Yellow);
 
-    warpLine[0].color = sf::Color::Green;
+    dkLine[0].color = sf::Color::Yellow;
+    dkLine[1].color = sf::Color(85,18,0);
+
     warpLine[0].color = sf::Color::Green;
 
     std::cout << "\nkmap contents:\n";
@@ -664,6 +739,69 @@ void EditState::draw()
         }
     }
 
+    // draw doors
+    if(currentMode == Mode::door || currentMode == Mode::key)
+    {
+        for(int j=0; j < map_doors.getMaxSize().second; ++j)
+        {
+            for(int i=0; i < map_doors.getMaxSize().first; ++i)
+            {
+                char* c = map_doors.get(i,j);
+                if(c != NULL)
+                {
+                    doorSymbol.setString(*c);
+                    doorSymbol.setPosition((float) (i * tsize), (float) (-j * tsize - tsize));
+                    getContext().window->draw(doorSymbol);
+                }
+            }
+        }
+    }
+
+    // draw keys
+    if(currentMode == Mode::key)
+    {
+        for(int j=0; j < map_keys.getMaxSize().second; ++j)
+        {
+            for(int i=0; i < map_keys.getMaxSize().first; ++i)
+            {
+                char* c = map_keys.get(i,j);
+                if(c != NULL)
+                {
+                    keySymbol.setString(*c);
+                    keySymbol.setPosition((float) (i*tsize), (float) (-j*tsize-tsize));
+                    getContext().window->draw(keySymbol);
+                }
+            }
+        }
+
+        for(auto iter = ktod.begin(); iter != ktod.end(); ++iter)
+        {
+            auto kcoords = map_keys.get(iter->first);
+            auto dcoords = map_doors.get(iter->second);
+
+            dkLine[0].position.x = (float) (kcoords.first * tsize) + ((float)tsize)/2.0f;
+            dkLine[0].position.y = (float) (-kcoords.second * tsize) - ((float)tsize)/2.0f;
+            dkLine[1].position.x = (float) (dcoords.first * tsize) + ((float)tsize)/2.0f;
+            dkLine[1].position.y = (float) (-dcoords.second * tsize) - ((float)tsize)/2.0f;
+
+            getContext().window->draw(dkLine);
+        }
+
+        if(keySelection != NULL)
+        {
+            sf::Vector2i mpos = sf::Mouse::getPosition(*(getContext().window));
+            sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
+
+            auto kcoords = map_keys.get(*keySelection);
+
+            dkLine[0].position.x = (float) (kcoords.first * tsize) + ((float)tsize)/2.0f;
+            dkLine[0].position.y = (float) (-kcoords.second * tsize) - ((float)tsize)/2.0f;
+            dkLine[1].position = gpos;
+
+            getContext().window->draw(dkLine);
+        }
+    }
+
     // draw grid
     for(float y=t + getContext().window->getView().getSize().y; y >= t; y-=(float)tsize)
         for(float x=l; x <= l + getContext().window->getView().getSize().x; x+=(float)tsize)
@@ -690,7 +828,8 @@ void EditState::draw()
 
     // Begin drawing for twindow
     getContext().twindow->clear(sf::Color(127,127,127));
-    if(currentMode != Mode::entities && currentMode != Mode::warps)
+    if(currentMode != Mode::entities && currentMode != Mode::warps
+        && currentMode != Mode::door && currentMode != Mode::key)
     {
         sheet.setTextureRect(sf::IntRect(0,0,isize.x,isize.y));
         sheet.setPosition(0.f,0.f);
@@ -710,6 +849,18 @@ void EditState::draw()
         warpSymbol.setString(validChars[eSymbolSelection]);
         warpSymbol.setPosition(0.0f, 0.0f);
         getContext().twindow->draw(warpSymbol);
+    }
+    else if(currentMode == Mode::door)
+    {
+        doorSymbol.setString(validChars[eSymbolSelection]);
+        doorSymbol.setPosition(0.0f, 0.0f);
+        getContext().twindow->draw(doorSymbol);
+    }
+    else if(currentMode == Mode::key)
+    {
+        keySymbol.setString(validChars[eSymbolSelection]);
+        keySymbol.setPosition(0.0f, 0.0f);
+        getContext().twindow->draw(keySymbol);
     }
     getContext().twindow->display();
 }
@@ -783,6 +934,34 @@ bool EditState::update()
                 map_warps.remove(x,y);
             }
         }
+        else if(currentMode == Mode::door)
+        {
+            char* d = map_doors.get(x,y);
+            if(d != NULL)
+            {
+                auto iter = dtok.find(*d);
+                if(iter != dtok.end())
+                {
+                    dtok.erase(*d);
+                    ktod.erase(iter->second);
+                }
+                map_doors.remove(x,y);
+            }
+        }
+        else if(currentMode == Mode::key)
+        {
+            char* k = map_keys.get(x,y);
+            if(k != NULL)
+            {
+                auto iter = ktod.find(*k);
+                if(iter != ktod.end())
+                {
+                    ktod.erase(*k);
+                    dtok.erase(iter->second);
+                }
+                map_keys.remove(x,y);
+            }
+        }
     }
     else if(drawing)
     {
@@ -852,6 +1031,36 @@ bool EditState::update()
                     warp_destinations.remove(x,y);
                 }
                 map_warps.add(validChars[eSymbolSelection], x, y);
+            }
+            else if(currentMode == Mode::door)
+            {
+                char* d = map_doors.get(x,y);
+                if(d != NULL)
+                {
+                    auto iter = dtok.find(*d);
+                    if(iter != dtok.end())
+                    {
+                        dtok.erase(*d);
+                        ktod.erase(iter->second);
+                    }
+                    map_doors.remove(x,y);
+                }
+                map_doors.add(validChars[eSymbolSelection], x, y);
+            }
+            else if(currentMode == Mode::key)
+            {
+                char* k = map_keys.get(x,y);
+                if(k != NULL)
+                {
+                    auto iter = ktod.find(*k);
+                    if(iter != ktod.end())
+                    {
+                        ktod.erase(*k);
+                        dtok.erase(iter->second);
+                    }
+                    map_keys.remove(x,y);
+                }
+                map_keys.add(validChars[eSymbolSelection], x, y);
             }
         }
     }
@@ -1116,6 +1325,70 @@ bool EditState::handleEvent(const sf::Event& event)
         of.flush();
         of.close();
 
+        // write doors
+        of.clear();
+        of.open(getContext().oFile + D_SUFFIX, std::ios::trunc | std::ios::out);
+        if(!of.is_open())
+        {
+            of.clear();
+            of.open(getContext().oFile + D_SUFFIX, std::ios::out);
+            of.close();
+            of.open(getContext().oFile + D_SUFFIX, std::ios::trunc | std::ios::out);
+        }
+
+        for(int j=my; j > map_doors.getMaxSize().second; --j)
+            of << '\n';
+        for(int y=map_doors.getMaxSize().second - 1; y >=0; --y)
+        {
+            for(int x=0; x < map_doors.getMaxSize().first; ++x)
+            {
+                char* c = map_doors.get(x,y);
+                if(c == NULL)
+                    of << ' ';
+                else
+                    of << *c;
+            }
+            of << '\n';
+        }
+
+        of.flush();
+        of.close();
+
+        // write keys
+        of.clear();
+        of.open(getContext().oFile + DK_SUFFIX, std::ios::trunc | std::ios::out);
+        if(!of.is_open())
+        {
+            of.clear();
+            of.open(getContext().oFile + DK_SUFFIX, std::ios::out);
+            of.close();
+            of.open(getContext().oFile + DK_SUFFIX, std::ios::trunc | std::ios::out);
+        }
+
+        for(auto iter = ktod.begin(); iter != ktod.end(); ++iter)
+        {
+            of << iter->first << ' ' << iter->second << '\n';
+        }
+        of << "#\n";
+
+        for(int j=my; j > map_keys.getMaxSize().second; --j)
+            of << '\n';
+        for(int y = map_keys.getMaxSize().second - 1; y >= 0; --y)
+        {
+            for(int x=0; x < map_keys.getMaxSize().first; ++x)
+            {
+                char* c = map_keys.get(x,y);
+                if(c == NULL)
+                    of << ' ';
+                else
+                    of << *c;
+            }
+            of << '\n';
+        }
+
+        of.flush();
+        of.close();
+
         saveIndicator.setFillColor(sf::Color::White);
     }
 
@@ -1182,6 +1455,14 @@ bool EditState::handleEvent(const sf::Event& event)
             getContext().twindow->setTitle("warps");
             break;
         case Mode::warps:
+            currentMode = Mode::door;
+            getContext().twindow->setTitle("door");
+            break;
+        case Mode::door:
+            currentMode = Mode::key;
+            getContext().twindow->setTitle("key");
+            break;
+        case Mode::key:
             currentMode = Mode::layer0;
             getContext().twindow->setTitle("layer0");
             break;
@@ -1198,8 +1479,8 @@ bool EditState::handleEvent(const sf::Event& event)
         switch(currentMode)
         {
         case Mode::layer0:
-            currentMode = Mode::warps;
-            getContext().twindow->setTitle("warps");
+            currentMode = Mode::key;
+            getContext().twindow->setTitle("key");
             break;
         case Mode::layer1:
             currentMode = Mode::layer0;
@@ -1224,6 +1505,14 @@ bool EditState::handleEvent(const sf::Event& event)
         case Mode::warps:
             currentMode = Mode::ewconnect;
             getContext().twindow->setTitle("entity_waypoint_connect");
+            break;
+        case Mode::door:
+            currentMode = Mode::warps;
+            getContext().twindow->setTitle("warps");
+            break;
+        case Mode::key:
+            currentMode = Mode::door;
+            getContext().twindow->setTitle("door");
             break;
         default:
             currentMode = Mode::layer0;
@@ -1320,6 +1609,42 @@ bool EditState::handleEvent(const sf::Event& event)
                 char* selChar = map_warps.get(x,y);
                 if(selChar != NULL)
                     warpSelection = selChar;
+            }
+        }
+        else if(currentMode == Mode::key)
+        {
+            if(keySelection == NULL)
+            {
+                char* selChar = map_keys.get(x,y);
+                keySelection = selChar;
+            }
+            else
+            {
+                char* door = map_doors.get(x,y);
+                if(door != NULL)
+                {
+                    {
+                        auto iter = dtok.find(*door);
+                        if(iter != dtok.end())
+                        {
+                            ktod.erase(iter->second);
+                            dtok.erase(iter);
+                        }
+                    }
+
+                    {
+                        auto iter = ktod.find(*keySelection);
+                        if(iter != ktod.end())
+                        {
+                            dtok.erase(iter->second);
+                            ktod.erase(iter);
+                        }
+                    }
+                    ktod.insert(std::pair<char,char>(*keySelection, *door));
+                    dtok.insert(std::pair<char,char>(*door, *keySelection));
+                }
+
+                keySelection = NULL;
             }
         }
     }
