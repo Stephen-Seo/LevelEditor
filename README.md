@@ -23,6 +23,7 @@ The files in question should be named:
 \[prefix\]\_key.txt  
 \[prefix\]\_level\_layer0.txt  
 \[prefix\]\_level\_layer1.txt  
+\[prefix\]\_level\_layer2.txt  
 \[prefix\]\_waypoint.txt  
 \[prefix\]\_obstacles.txt  
 \[prefix\]\_entities.txt  
@@ -103,7 +104,7 @@ L (in key mode) picks a key or sets a door that the key unlocks.
 A/D (in door/key mode) changes the symbol that is drawn.
 
 
-In layer0/layer1 mode, you place the tiles in the layer specified.  
+In layer0/layer1/layer2 mode, you place the tiles in the layer specified.  
 In waypoint mode, you place waypoints.  
 Hover over a waypoint, hit 'L', hover over another waypoint, hit 'L' again to set/unset waypoint adjacency.  
 In obstacles mode, you place obstacles (determines what the player cannot walk through).  
@@ -118,6 +119,7 @@ In key mode, one creates key entities and is able to link keys to doors.
 When saving, the program will overwrite the following files:  
 \[prefix\]\_level\_layer0.txt  
 \[prefix\]\_level\_layer1.txt  
+\[prefix\]\_level\_layer2.txt  
 \[prefix\]\_waypoint.txt  
 \[prefix\]\_obstacles.txt  
 \[prefix\]\_entities.txt  
