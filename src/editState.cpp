@@ -7,6 +7,7 @@ currentMode(Mode::layer0),
 kmap(),
 map_layer0(),
 map_layer1(),
+map_layer2(),
 validChars("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@$%^&*()-_=+[]{}|;:',./<>?"),
 wm(),
 map_waypoint(),
@@ -130,6 +131,33 @@ warpSelection(NULL)
                 if(line[i] != ' ')
                 {
                     map_layer1.add(line[i], i, j);
+                }
+            }
+        }
+        of.close();
+    }
+
+    // parse layer 2
+    of.clear();
+    of.open(getContext().oFile + L2_SUFFIX);
+    line = "";
+
+    if(of.is_open())
+    {
+        int y;
+        for(y=0 ; std::getline(of,line); ++y);
+
+        of.close();
+        of.clear();
+        of.open(getContext().oFile + L2_SUFFIX);
+
+        for(int j=y-1; std::getline(of, line); --j)
+        {
+            for(int i=0; i < line.size(); ++i)
+            {
+                if(line[i] != ' ')
+                {
+                    map_layer2.add(line[i], i, j);
                 }
             }
         }
@@ -481,7 +509,7 @@ void EditState::draw()
     int left,top;
 
     // draw layer0
-    if(currentMode != Mode::layer1)
+    if(currentMode != Mode::layer1 && currentMode != Mode::layer2)
     {
         for(int y=0; y < map_layer0.getMaxSize().second; ++y)
         {
@@ -499,11 +527,29 @@ void EditState::draw()
     }
 
     // draw layer1
-    if(currentMode != Mode::layer0)
+    if(currentMode != Mode::layer0 && currentMode != Mode::layer2)
     {
         for(int y=0; y < map_layer1.getMaxSize().second; ++y)
         {
             auto row = map_layer1.getRow(y);
+            for(auto rowIter = row.begin(); rowIter != row.end(); ++rowIter)
+            {
+                auto pair = kmap.find(rowIter->obj)->second;
+                left = pair.first * tsize;
+                top = pair.second * tsize;
+                sheet.setTextureRect(sf::IntRect(left, top, tsize, tsize));
+                sheet.setPosition(rowIter->x * tsize, -rowIter->y * tsize - tsize);
+                getContext().window->draw(sheet);
+            }
+        }
+    }
+
+    // draw layer2
+    if(currentMode != Mode::layer0 && currentMode != Mode::layer1)
+    {
+        for(int y=0; y < map_layer2.getMaxSize().second; ++y)
+        {
+            auto row = map_layer2.getRow(y);
             for(auto rowIter = row.begin(); rowIter != row.end(); ++rowIter)
             {
                 auto pair = kmap.find(rowIter->obj)->second;
@@ -894,6 +940,8 @@ bool EditState::update()
             map_layer0.remove(x,y);
         else if(currentMode == Mode::layer1)
             map_layer1.remove(x,y);
+        else if(currentMode == Mode::layer2)
+            map_layer2.remove(x,y);
         else if(currentMode == Mode::waypoint)
         {
             char* waypointChar = map_waypoint.get(x,y);
@@ -992,6 +1040,12 @@ bool EditState::update()
                 if(map_layer1.get(x,y) != NULL)
                     map_layer1.remove(x,y);
                 map_layer1.add(selChar, x, y);
+            }
+            else if(currentMode == Mode::layer2 && selChar != ' ')
+            {
+                if(map_layer2.get(x,y) != NULL)
+                    map_layer2.remove(x,y);
+                map_layer2.add(selChar, x, y);
             }
             else if(currentMode == Mode::waypoint)
             {
@@ -1107,10 +1161,20 @@ bool EditState::handleEvent(const sf::Event& event)
             my = map_layer0.getMaxSize().second;
         if(map_layer1.getMaxSize().second > my)
             my = map_layer1.getMaxSize().second;
+        if(map_layer2.getMaxSize().second > my)
+            my = map_layer2.getMaxSize().second;
         if(map_waypoint.getMaxSize().second > my)
             my = map_waypoint.getMaxSize().second;
         if(map_obstacles.getMaxSize().second > my)
             my = map_obstacles.getMaxSize().second;
+        if(map_entities.getMaxSize().second > my)
+            my = map_entities.getMaxSize().second;
+        if(map_warps.getMaxSize().second > my)
+            my = map_warps.getMaxSize().second;
+        if(map_doors.getMaxSize().second > my)
+            my = map_doors.getMaxSize().second;
+        if(map_keys.getMaxSize().second > my)
+            my = map_keys.getMaxSize().second;
 
         std::fstream of;
 
@@ -1160,6 +1224,34 @@ bool EditState::handleEvent(const sf::Event& event)
             for(int x=0; x < map_layer1.getMaxSize().first; ++x)
             {
                 char* c = map_layer1.get(x,y);
+                if(c == NULL)
+                    of << ' ';
+                else
+                    of << (*c);
+            }
+            of << '\n';
+        }
+
+        of.flush();
+        of.close();
+
+        // write layer2
+        of.open(getContext().oFile + L2_SUFFIX, std::ios::trunc | std::ios::out);
+        if(!of.is_open())
+        {
+            of.clear();
+            of.open(getContext().oFile + L2_SUFFIX, std::ios::out);
+            of.close();
+            of.open(getContext().oFile + L2_SUFFIX, std::ios::trunc | std::ios::out);
+        }
+
+        for(int j = my; j > map_layer2.getMaxSize().second; --j)
+            of << '\n';
+        for(int y = map_layer2.getMaxSize().second - 1; y >= 0; --y)
+        {
+            for(int x=0; x < map_layer2.getMaxSize().first; ++x)
+            {
+                char* c = map_layer2.get(x,y);
                 if(c == NULL)
                     of << ' ';
                 else
@@ -1435,9 +1527,13 @@ bool EditState::handleEvent(const sf::Event& event)
             getContext().twindow->setTitle("layer1");
             break;
         case Mode::layer1:
+            currentMode = Mode::layer2;
+            getContext().twindow->setTitle("layer2");
+            break;
+        case Mode::layer2:
             currentMode = Mode::waypoint;
             getContext().twindow->setTitle("waypoint");
-            break;
+            break;          
         case Mode::waypoint:
             currentMode = Mode::obstacles;
             getContext().twindow->setTitle("obstacles");
@@ -1486,9 +1582,13 @@ bool EditState::handleEvent(const sf::Event& event)
             currentMode = Mode::layer0;
             getContext().twindow->setTitle("layer0");
             break;
-        case Mode::waypoint:
+        case Mode::layer2:
             currentMode = Mode::layer1;
             getContext().twindow->setTitle("layer1");
+            break;
+        case Mode::waypoint:
+            currentMode = Mode::layer2;
+            getContext().twindow->setTitle("layer2");
             break;
         case Mode::obstacles:
             currentMode = Mode::waypoint;

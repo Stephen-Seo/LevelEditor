@@ -17,6 +17,7 @@
 #define K_SUFFIX "_key.txt"
 #define L0_SUFFIX "_level_layer0.txt"
 #define L1_SUFFIX "_level_layer1.txt"
+#define L2_SUFFIX "_level_layer2.txt"
 #define W_SUFFIX "_waypoint.txt"
 #define O_SUFFIX "_obstacles.txt"
 #define E_SUFFIX "_entities.txt"
@@ -35,7 +36,7 @@ public:
 private:
     enum Mode
     {
-        layer0, layer1, waypoint, obstacles, entities, ewconnect, warps, door, key
+        layer0, layer1, layer2, waypoint, obstacles, entities, ewconnect, warps, door, key
     };
 
     Mode currentMode;
@@ -43,6 +44,7 @@ private:
     std::map<char, std::pair<int,int> > kmap;
     CoordinateMap<char> map_layer0;
     CoordinateMap<char> map_layer1;
+    CoordinateMap<char> map_layer2;
 
     std::string validChars;
     WaypointManager wm;
