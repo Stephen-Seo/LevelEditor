@@ -15,8 +15,8 @@ void pUsage()
 
 int main(int argc, char** argv) {
 
-    std::string oFile;
-    std::string imgFile;
+    std::string oFile = "";
+    std::string imgFile = "";
 
     while(--argc > 0)
     {
@@ -40,20 +40,8 @@ int main(int argc, char** argv) {
         }
     }
 
-    if(oFile == "")
-    {
-        std::cout << "\nError: outputFile not specified!\n";
-        pUsage();
-        return 0;
-    }
-    else if(imgFile == "")
-    {
-        std::cout << "\nError: tilesheet file not specified!\n";
-        pUsage();
-        return 0;
-    }
-
-    std::cout << "Using sheet " << imgFile << "\nUsing output " << oFile << "\n";
+    if(oFile != "" && imgFile != "")
+        std::cout << "Using sheet \"" << imgFile << "\"\nUsing output \"" << oFile << "\"\n";
 
     try {
         Game game(oFile, imgFile);

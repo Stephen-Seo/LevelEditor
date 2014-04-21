@@ -11,11 +11,12 @@
 #include "stateStack.hpp"
 #include "stateIdentifiers.hpp"
 #include "editState.hpp"
+#include "openState.hpp"
 
 class Game
 {
 public:
-    Game(std::string oFile, std::string imgFile);
+    Game(std::string inPrefix, std::string imgFile);
     void run();
 private:
     void processEvents();
@@ -28,6 +29,8 @@ private:
 
     TextureHolder textureHolder;
     FontHolder fontHolder;
+
+    std::string oFile;
 
     StateStack stateStack;
 };

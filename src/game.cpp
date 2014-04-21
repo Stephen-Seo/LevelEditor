@@ -9,15 +9,17 @@
 #define CS_PATH "../resources/ClearSans-Regular.ttf"
 #endif
 
-Game::Game(std::string oFile, std::string imgFile)
-: window(sf::VideoMode(800,600), "SFML App"),
+Game::Game(std::string inPrefix, std::string imgFile)
+: window(sf::VideoMode(800,600), "Level Editor"),
 twindow(),
 textureHolder(),
 fontHolder(),
 stateStack(State::Context(window, twindow, textureHolder, fontHolder, oFile))
 {
+    registerStates();
     window.setFramerateLimit(60);
-    textureHolder.load(Textures::TileSheet, imgFile);
+    oFile = inPrefix;
+
     try{
         fontHolder.load(Fonts::ClearSans, "ClearSans-Regular.ttf");
     } catch(std::runtime_error e)
@@ -27,9 +29,15 @@ stateStack(State::Context(window, twindow, textureHolder, fontHolder, oFile))
         fontHolder.load(Fonts::ClearSans, CS_PATH);
     }
 
-    registerStates();
-
-    stateStack.pushState(States::EditState);
+    if(oFile == "" && imgFile == "")
+    {
+        stateStack.pushState(States::OpenState);
+    }
+    else
+    {
+        textureHolder.load(Textures::TileSheet, imgFile);
+        stateStack.pushState(States::EditState);
+    }
 }
 
 void Game::run()
@@ -70,4 +78,5 @@ void Game::draw()
 void Game::registerStates()
 {
     stateStack.registerState<EditState>(States::EditState);
+    stateStack.registerState<OpenState>(States::OpenState);
 }

@@ -6,7 +6,8 @@ namespace States
     enum ID
     {
         None,
-        EditState
+        EditState,
+        OpenState
     };
 }
 

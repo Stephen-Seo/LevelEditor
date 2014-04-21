@@ -37,7 +37,7 @@ warpSelection(NULL)
 
     // Parse keyfile
     std::fstream ks;
-    ks.open(getContext().oFile + K_SUFFIX);
+    ks.open(*(getContext().oFile) + K_SUFFIX);
     if(!ks.is_open())
     {
         ks.close();
@@ -85,7 +85,7 @@ warpSelection(NULL)
 
     // parse layer 0
     std::fstream of;
-    of.open(getContext().oFile + L0_SUFFIX);
+    of.open(*(getContext().oFile) + L0_SUFFIX);
     line = "";
 
     if(of.is_open())
@@ -95,7 +95,7 @@ warpSelection(NULL)
 
         of.close();
         of.clear();
-        of.open(getContext().oFile + L0_SUFFIX);
+        of.open(*(getContext().oFile) + L0_SUFFIX);
 
         for(int j=y-1; std::getline(of, line); --j)
         {
@@ -112,7 +112,7 @@ warpSelection(NULL)
 
     // parse layer 1
     of.clear();
-    of.open(getContext().oFile + L1_SUFFIX);
+    of.open(*(getContext().oFile) + L1_SUFFIX);
     line = "";
 
     if(of.is_open())
@@ -122,7 +122,7 @@ warpSelection(NULL)
 
         of.close();
         of.clear();
-        of.open(getContext().oFile + L1_SUFFIX);
+        of.open(*(getContext().oFile) + L1_SUFFIX);
 
         for(int j=y-1; std::getline(of, line); --j)
         {
@@ -139,7 +139,7 @@ warpSelection(NULL)
 
     // parse layer 2
     of.clear();
-    of.open(getContext().oFile + L2_SUFFIX);
+    of.open(*(getContext().oFile) + L2_SUFFIX);
     line = "";
 
     if(of.is_open())
@@ -149,7 +149,7 @@ warpSelection(NULL)
 
         of.close();
         of.clear();
-        of.open(getContext().oFile + L2_SUFFIX);
+        of.open(*(getContext().oFile) + L2_SUFFIX);
 
         for(int j=y-1; std::getline(of, line); --j)
         {
@@ -166,7 +166,7 @@ warpSelection(NULL)
 
     // parse waypoints
     of.clear();
-    of.open(getContext().oFile + W_SUFFIX);
+    of.open(*(getContext().oFile) + W_SUFFIX);
     line = "";
 
     if(of.is_open())
@@ -189,7 +189,7 @@ warpSelection(NULL)
         // get adjacent
         of.close();
         of.clear();
-        of.open(getContext().oFile + W_SUFFIX);
+        of.open(*(getContext().oFile) + W_SUFFIX);
         line = "";
         do
         {
@@ -223,7 +223,7 @@ warpSelection(NULL)
 
     // parse obstacles
     of.clear();
-    of.open(getContext().oFile + O_SUFFIX);
+    of.open(*(getContext().oFile) + O_SUFFIX);
     line = "";
     if(of.is_open())
     {
@@ -232,7 +232,7 @@ warpSelection(NULL)
 
         of.close();
         of.clear();
-        of.open(getContext().oFile + O_SUFFIX);
+        of.open(*(getContext().oFile) + O_SUFFIX);
 
         for(int j=y-1; std::getline(of,line); --j)
         {
@@ -249,7 +249,7 @@ warpSelection(NULL)
 
     // parse entities
     of.clear();
-    of.open(getContext().oFile + E_SUFFIX);
+    of.open(*(getContext().oFile) + E_SUFFIX);
     line = "";
     if(of.is_open())
     {
@@ -274,7 +274,7 @@ warpSelection(NULL)
 
         of.close();
         of.clear();
-        of.open(getContext().oFile + E_SUFFIX);
+        of.open(*(getContext().oFile) + E_SUFFIX);
 
         // reset to just past delimeter
         while(std::getline(of,line) && line[0] != '#');
@@ -295,7 +295,7 @@ warpSelection(NULL)
 
     // parse warps
     of.clear();
-    of.open(getContext().oFile + WA_SUFFIX);
+    of.open(*(getContext().oFile) + WA_SUFFIX);
     line = "";
     if(of.is_open())
     {
@@ -328,7 +328,7 @@ warpSelection(NULL)
 
         of.close();
         of.clear();
-        of.open(getContext().oFile + WA_SUFFIX);
+        of.open(*(getContext().oFile) + WA_SUFFIX);
 
         while(std::getline(of,line) && line[0] != '#');
 
@@ -347,7 +347,7 @@ warpSelection(NULL)
 
     // parse doors
     of.clear();
-    of.open(getContext().oFile + D_SUFFIX);
+    of.open(*(getContext().oFile) + D_SUFFIX);
     line = "";
     if(of.is_open())
     {
@@ -356,7 +356,7 @@ warpSelection(NULL)
 
         of.close();
         of.clear();
-        of.open(getContext().oFile + D_SUFFIX);
+        of.open(*(getContext().oFile) + D_SUFFIX);
 
         for(int j=y; std::getline(of,line); --j)
         {
@@ -374,7 +374,7 @@ warpSelection(NULL)
 
     // parse keys to doors
     of.clear();
-    of.open(getContext().oFile + DK_SUFFIX);
+    of.open(*(getContext().oFile) + DK_SUFFIX);
     line = "";
     if(of.is_open())
     {
@@ -398,7 +398,7 @@ warpSelection(NULL)
 
         of.close();
         of.clear();
-        of.open(getContext().oFile + DK_SUFFIX);
+        of.open(*(getContext().oFile) + DK_SUFFIX);
 
         while(std::getline(of,line) && line[0] != '#');
 
@@ -1179,13 +1179,13 @@ bool EditState::handleEvent(const sf::Event& event)
         std::fstream of;
 
         // write layer0
-        of.open(getContext().oFile + L0_SUFFIX, std::ios::trunc | std::ios::out);
+        of.open(*(getContext().oFile) + L0_SUFFIX, std::ios::trunc | std::ios::out);
         if(!of.is_open())
         {
             of.clear();
-            of.open(getContext().oFile + L0_SUFFIX, std::ios::out);
+            of.open(*(getContext().oFile) + L0_SUFFIX, std::ios::out);
             of.close();
-            of.open(getContext().oFile + L0_SUFFIX, std::ios::trunc | std::ios::out);
+            of.open(*(getContext().oFile) + L0_SUFFIX, std::ios::trunc | std::ios::out);
         }
 
         for(int j = my; j > map_layer0.getMaxSize().second; --j)
@@ -1208,13 +1208,13 @@ bool EditState::handleEvent(const sf::Event& event)
 
         // write layer1
         of.clear();
-        of.open(getContext().oFile + L1_SUFFIX, std::ios::trunc | std::ios::out);
+        of.open(*(getContext().oFile) + L1_SUFFIX, std::ios::trunc | std::ios::out);
         if(!of.is_open())
         {
             of.clear();
-            of.open(getContext().oFile + L1_SUFFIX, std::ios::out);
+            of.open(*(getContext().oFile) + L1_SUFFIX, std::ios::out);
             of.close();
-            of.open(getContext().oFile + L1_SUFFIX, std::ios::trunc | std::ios::out);
+            of.open(*(getContext().oFile) + L1_SUFFIX, std::ios::trunc | std::ios::out);
         }
 
         for(int j = my; j > map_layer1.getMaxSize().second; --j)
@@ -1236,13 +1236,13 @@ bool EditState::handleEvent(const sf::Event& event)
         of.close();
 
         // write layer2
-        of.open(getContext().oFile + L2_SUFFIX, std::ios::trunc | std::ios::out);
+        of.open(*(getContext().oFile) + L2_SUFFIX, std::ios::trunc | std::ios::out);
         if(!of.is_open())
         {
             of.clear();
-            of.open(getContext().oFile + L2_SUFFIX, std::ios::out);
+            of.open(*(getContext().oFile) + L2_SUFFIX, std::ios::out);
             of.close();
-            of.open(getContext().oFile + L2_SUFFIX, std::ios::trunc | std::ios::out);
+            of.open(*(getContext().oFile) + L2_SUFFIX, std::ios::trunc | std::ios::out);
         }
 
         for(int j = my; j > map_layer2.getMaxSize().second; --j)
@@ -1265,13 +1265,13 @@ bool EditState::handleEvent(const sf::Event& event)
 
         // write waypoints
         of.clear();
-        of.open(getContext().oFile + W_SUFFIX, std::ios::trunc | std::ios::out);
+        of.open(*(getContext().oFile) + W_SUFFIX, std::ios::trunc | std::ios::out);
         if(!of.is_open())
         {
             of.clear();
-            of.open(getContext().oFile + W_SUFFIX, std::ios::out);
+            of.open(*(getContext().oFile) + W_SUFFIX, std::ios::out);
             of.close();
-            of.open(getContext().oFile + W_SUFFIX, std::ios::trunc | std::ios::out);
+            of.open(*(getContext().oFile) + W_SUFFIX, std::ios::trunc | std::ios::out);
         }
 
         std::string usedChars = wm.getCurrentChars();
@@ -1308,13 +1308,13 @@ bool EditState::handleEvent(const sf::Event& event)
 
         // write obstacles
         of.clear();
-        of.open(getContext().oFile + O_SUFFIX, std::ios::trunc | std::ios::out);
+        of.open(*(getContext().oFile) + O_SUFFIX, std::ios::trunc | std::ios::out);
         if(!of.is_open())
         {
             of.clear();
-            of.open(getContext().oFile + O_SUFFIX, std::ios::out);
+            of.open(*(getContext().oFile) + O_SUFFIX, std::ios::out);
             of.close();
-            of.open(getContext().oFile + O_SUFFIX, std::ios::trunc | std::ios::out);
+            of.open(*(getContext().oFile) + O_SUFFIX, std::ios::trunc | std::ios::out);
         }
 
         for(int j = my; j > map_obstacles.getMaxSize().second; --j)
@@ -1337,13 +1337,13 @@ bool EditState::handleEvent(const sf::Event& event)
 
         // write entities
         of.clear();
-        of.open(getContext().oFile + E_SUFFIX, std::ios::trunc | std::ios::out);
+        of.open(*(getContext().oFile) + E_SUFFIX, std::ios::trunc | std::ios::out);
         if(!of.is_open())
         {
             of.clear();
-            of.open(getContext().oFile + E_SUFFIX, std::ios::out);
+            of.open(*(getContext().oFile) + E_SUFFIX, std::ios::out);
             of.close();
-            of.open(getContext().oFile + E_SUFFIX, std::ios::trunc | std::ios::out);
+            of.open(*(getContext().oFile) + E_SUFFIX, std::ios::trunc | std::ios::out);
         }
 
         for(auto iter = ewmap.begin(); iter != ewmap.end(); ++iter)
@@ -1379,13 +1379,13 @@ bool EditState::handleEvent(const sf::Event& event)
 
         // write warps
         of.clear();
-        of.open(getContext().oFile + WA_SUFFIX, std::ios::trunc | std::ios::out);
+        of.open(*(getContext().oFile) + WA_SUFFIX, std::ios::trunc | std::ios::out);
         if(!of.is_open())
         {
             of.clear();
-            of.open(getContext().oFile + WA_SUFFIX, std::ios::out);
+            of.open(*(getContext().oFile) + WA_SUFFIX, std::ios::out);
             of.close();
-            of.open(getContext().oFile + WA_SUFFIX, std::ios::trunc | std::ios::out);
+            of.open(*(getContext().oFile) + WA_SUFFIX, std::ios::trunc | std::ios::out);
         }
 
         for(int j=0; j < warp_destinations.getMaxSize().second; ++j)
@@ -1419,13 +1419,13 @@ bool EditState::handleEvent(const sf::Event& event)
 
         // write doors
         of.clear();
-        of.open(getContext().oFile + D_SUFFIX, std::ios::trunc | std::ios::out);
+        of.open(*(getContext().oFile) + D_SUFFIX, std::ios::trunc | std::ios::out);
         if(!of.is_open())
         {
             of.clear();
-            of.open(getContext().oFile + D_SUFFIX, std::ios::out);
+            of.open(*(getContext().oFile) + D_SUFFIX, std::ios::out);
             of.close();
-            of.open(getContext().oFile + D_SUFFIX, std::ios::trunc | std::ios::out);
+            of.open(*(getContext().oFile) + D_SUFFIX, std::ios::trunc | std::ios::out);
         }
 
         for(int j=my; j > map_doors.getMaxSize().second; --j)
@@ -1448,13 +1448,13 @@ bool EditState::handleEvent(const sf::Event& event)
 
         // write keys
         of.clear();
-        of.open(getContext().oFile + DK_SUFFIX, std::ios::trunc | std::ios::out);
+        of.open(*(getContext().oFile) + DK_SUFFIX, std::ios::trunc | std::ios::out);
         if(!of.is_open())
         {
             of.clear();
-            of.open(getContext().oFile + DK_SUFFIX, std::ios::out);
+            of.open(*(getContext().oFile) + DK_SUFFIX, std::ios::out);
             of.close();
-            of.open(getContext().oFile + DK_SUFFIX, std::ios::trunc | std::ios::out);
+            of.open(*(getContext().oFile) + DK_SUFFIX, std::ios::trunc | std::ios::out);
         }
 
         for(auto iter = ktod.begin(); iter != ktod.end(); ++iter)
