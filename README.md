@@ -1,6 +1,4 @@
-Note: the program is meant to be started from the terminal/cmd/powershell
-
-Another Note: the program is licensed under the MIT license. It can
+Note: the program is licensed under the MIT license. It can
 be found in the src folder. the font used by this program is licensed
 under the Apache License Version 2.0. That can be found in the resources
 folder.
@@ -69,7 +67,9 @@ a specific tile/obstacle (in the obstacles file, obstacles are denoted with
 
 # Usage
 
-run the LevelEditor binary in terminal/cmd/powershell.
+run the LevelEditor binary.
+
+if running from cmd/powershell/terminal,
 
 needs options:  
 -p \[prefix\]  
