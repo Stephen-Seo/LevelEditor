@@ -6,6 +6,12 @@
 
 #include "game.hpp"
 
+#if defined(_WIN32)
+#include <Windows.h>
+#elif defined(__WIN32__)
+#include <Windows.h>
+#endif
+
 void pUsage()
 {
     std::cout << "\nUsage:\n";
@@ -14,6 +20,12 @@ void pUsage()
 }
 
 int main(int argc, char** argv) {
+
+    #if defined(_WIN32)
+    FreeConsole();
+    #elif defined(__WIN32__)
+    FreeConsole();
+    #endif
 
     std::string oFile = "";
     std::string imgFile = "";
