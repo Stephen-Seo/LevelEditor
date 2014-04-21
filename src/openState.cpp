@@ -64,6 +64,16 @@ void OpenState::draw()
     info.setString("When finished, press the enter key.");
     info.setStyle(sf::Text::Bold);
     getContext().window->draw(info);
+
+    info.setPosition(0.0f, 240.0f);
+    info.setString("Note:\n\tIf the keyfile is \"stuff_key.txt\", then the prefix is \"stuff\".");
+    info.setStyle(sf::Text::Regular);
+    getContext().window->draw(info);
+
+    info.setPosition(0.0f, 300.0f);
+    info.setString("\tIf the tilesheet is \"tiles.png\", then the filename is the same.");
+    info.setStyle(sf::Text::Regular);
+    getContext().window->draw(info);
 }
 
 bool OpenState::update()
