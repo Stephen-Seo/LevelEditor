@@ -358,7 +358,7 @@ warpSelection(NULL)
         of.clear();
         of.open(*(getContext().oFile) + D_SUFFIX);
 
-        for(int j=y; std::getline(of,line); --j)
+        for(int j=y-1; std::getline(of,line); --j)
         {
             for(int i=0; i < line.size(); ++i)
             {
@@ -402,7 +402,7 @@ warpSelection(NULL)
 
         while(std::getline(of,line) && line[0] != '#');
 
-        for(int j=y; std::getline(of,line); --j)
+        for(int j=y-1; std::getline(of,line); --j)
         {
             for(int i=0; i < line.size(); ++i)
             {
