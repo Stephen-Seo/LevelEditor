@@ -41,13 +41,18 @@ public:
     std::list<ColumnEntry<T> > getColumn(int x);
     std::list<RowEntry<T> > getRow(int y);
     std::pair<int,int> getMaxSize();
+    std::pair<int,int> getMinSize();
+    unsigned int getSize();
 private:
     int maxX;
     int maxY;
+    int minX;
+    int minY;
     std::multimap<int, RowEntry<T> > rows;
     std::multimap<int, ColumnEntry<T> > columns;
 
     void decrementCheckMaxVals();
+    void incrementCheckMinVals();
 };
 
 #include "coordinateMap.inl"

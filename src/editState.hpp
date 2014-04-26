@@ -14,6 +14,8 @@
 
 #include "coordinateMap.hpp"
 
+#include "parser.hpp"
+
 #define K_SUFFIX "_key.txt"
 #define L0_SUFFIX "_level_layer0.txt"
 #define L1_SUFFIX "_level_layer1.txt"

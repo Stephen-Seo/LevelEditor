@@ -36,384 +36,105 @@ warpSelection(NULL)
     isize = getContext().textures->get(Textures::TileSheet).getSize();
 
     // Parse keyfile
-    std::fstream ks;
-    ks.open(*(getContext().oFile) + K_SUFFIX);
-    if(!ks.is_open())
+    Parser p;
     {
-        ks.close();
-        throw std::runtime_error("Unable to open Keyfile.");
+        Parser::Context c = p.parse(*(getContext().oFile) + K_SUFFIX, Parser::keyfile);
+        if(!c.success)
+            throw std::runtime_error("Keyfile parsing error.");
+        tsize = c.tilesize;
+        kmap = c.kmap;
     }
-
-    ks >> tsize;
-    if(ks.fail())
-    {
-        ks.close();
-        throw std::runtime_error("Unable to read Keyfile.");
-    }
-
-    std::string line;
-    std::getline(ks, line);
-
-    for(int j=0; std::getline(ks, line); ++j)
-    {
-        for(int i=0; i < line.size(); ++i)
-        {
-            if(line[i] != ' ')
-            {
-                kmap.insert(std::pair<char, std::pair<int, int> >(line[i], std::pair<int, int>(i,j)));
-            }
-        }
-    }
-
-    std::cout << kmap.size() << " is number of symbols in key map.\n";
-
-    if(ks.bad())
-    {
-        ks.close();
-        throw std::runtime_error("Unable to read Keyfile. (stream badbit true.)");
-    }
-    else if(ks.fail() && !ks.eof())
-    {
-        ks.close();
-        throw std::runtime_error("Unable to read Keyfile. (stream failbit true.)");
-    }
-
-    ks.close();
 
     // create window for selecting tiles
     getContext().twindow->create(sf::VideoMode(isize.x,isize.y), "layer0");
 
     // parse layer 0
-    std::fstream of;
-    of.open(*(getContext().oFile) + L0_SUFFIX);
-    line = "";
-
-    if(of.is_open())
     {
-        int y;
-        for(y=0 ; std::getline(of,line); ++y);
-
-        of.close();
-        of.clear();
-        of.open(*(getContext().oFile) + L0_SUFFIX);
-
-        for(int j=y-1; std::getline(of, line); --j)
-        {
-            for(int i=0; i < line.size(); ++i)
-            {
-                if(line[i] != ' ')
-                {
-                    map_layer0.add(line[i], i, j);
-                }
-            }
-        }
-        of.close();
+        Parser::Context c = p.parse(*(getContext().oFile) + L0_SUFFIX, Parser::level);
+        if(c.success)
+            map_layer0 = c.map;
     }
 
     // parse layer 1
-    of.clear();
-    of.open(*(getContext().oFile) + L1_SUFFIX);
-    line = "";
 
-    if(of.is_open())
     {
-        int y;
-        for(y=0; std::getline(of,line); ++y);
-
-        of.close();
-        of.clear();
-        of.open(*(getContext().oFile) + L1_SUFFIX);
-
-        for(int j=y-1; std::getline(of, line); --j)
-        {
-            for(int i=0; i < line.size(); ++i)
-            {
-                if(line[i] != ' ')
-                {
-                    map_layer1.add(line[i], i, j);
-                }
-            }
-        }
-        of.close();
+        Parser::Context c = p.parse(*(getContext().oFile) + L1_SUFFIX, Parser::level);
+        if(c.success)
+            map_layer1 = c.map;
     }
 
     // parse layer 2
-    of.clear();
-    of.open(*(getContext().oFile) + L2_SUFFIX);
-    line = "";
 
-    if(of.is_open())
     {
-        int y;
-        for(y=0 ; std::getline(of,line); ++y);
-
-        of.close();
-        of.clear();
-        of.open(*(getContext().oFile) + L2_SUFFIX);
-
-        for(int j=y-1; std::getline(of, line); --j)
-        {
-            for(int i=0; i < line.size(); ++i)
-            {
-                if(line[i] != ' ')
-                {
-                    map_layer2.add(line[i], i, j);
-                }
-            }
-        }
-        of.close();
+        Parser::Context c = p.parse(*(getContext().oFile) + L2_SUFFIX, Parser::level);
+        if(c.success)
+            map_layer2 = c.map;
     }
 
     // parse waypoints
-    of.clear();
-    of.open(*(getContext().oFile) + W_SUFFIX);
-    line = "";
-
-    if(of.is_open())
     {
-        // find delimeter, parse symbols
-        do
+        Parser::Context c = p.parse(*(getContext().oFile) + W_SUFFIX, Parser::waypoint);
+        if(c.success)
         {
-            std::getline(of, line);
-            if(line[0] == '#')
-            {
-                break;
-            }
-            wm.addWaypoint(line[0]);
-        }while(line != "");
+            auto list = c.wm.getCurrentChars();
+            for(unsigned int x = 0; x < list.size(); ++x)
+                wm.addWaypoint(list[x]);
 
-        // get height of map
-        int y;
-        for(y=0; std::getline(of, line); ++y);
-
-        // get adjacent
-        of.close();
-        of.clear();
-        of.open(*(getContext().oFile) + W_SUFFIX);
-        line = "";
-        do
-        {
-            std::getline(of, line);
-            if(line[0] == '#')
-            {
-                break;
-            }
-            char current = line[0];
-            for(int i=1; i < line.size(); ++i)
-            {
-                if(line[i] == ' ')
-                    continue;
-                wm.makeAdjacent(current, line[i]);
-            }
-        }while(line != "");
-
-        // location parsing
-        for(int j=y-1; std::getline(of, line); --j)
-        {
-            for(int i=0; i < line.size(); ++i)
-            {
-                if(line[i] != ' ')
+            for(unsigned int x = 0; x < list.size(); ++x)
+                for(unsigned int y = 0; y < list.size(); ++y)
                 {
-                    map_waypoint.add(line[i], i, j);
+                    if(x == y)
+                        continue;
+                    if(c.wm.isAdjacent(list[x],list[y]))
+                        wm.makeAdjacent(list[x],list[y]);
                 }
-            }
+            map_waypoint = c.map;
         }
-        of.close();
     }
 
     // parse obstacles
-    of.clear();
-    of.open(*(getContext().oFile) + O_SUFFIX);
-    line = "";
-    if(of.is_open())
     {
-        int y;
-        for(y=0; std::getline(of,line); ++y);
-
-        of.close();
-        of.clear();
-        of.open(*(getContext().oFile) + O_SUFFIX);
-
-        for(int j=y-1; std::getline(of,line); --j)
-        {
-            for(int i=0; i < line.size(); ++i)
-            {
-                if(line[i] != ' ')
-                {
-                    map_obstacles.add('o', i, j);
-                }
-            }
-        }
-        of.close();
+        Parser::Context c = p.parse(*(getContext().oFile) + O_SUFFIX, Parser::obstacle);
+        if(c.success)
+            map_obstacles = c.map;
     }
 
     // parse entities
-    of.clear();
-    of.open(*(getContext().oFile) + E_SUFFIX);
-    line = "";
-    if(of.is_open())
     {
-        // parse connections until delimeter is reached
-        while(std::getline(of,line))
+        Parser::Context c = p.parse(*(getContext().oFile) + E_SUFFIX, Parser::entity);
+        if(c.success)
         {
-            if(line[0] == '#')
-                break;
-
-            ewmap.insert(std::pair<char,std::list<char> >(line[0], std::list<char>()));
-            for(int i=1; i < line.size(); ++i)
-            {
-                if(line[i] == ' ')
-                    continue;
-                ewmap[line[0]].push_back(line[i]);
-            }
+            ewmap = c.ewmap;
+            map_entities = c.map;
         }
-
-        // get height
-        int y;
-        for(y=0; std::getline(of,line); ++y);
-
-        of.close();
-        of.clear();
-        of.open(*(getContext().oFile) + E_SUFFIX);
-
-        // reset to just past delimeter
-        while(std::getline(of,line) && line[0] != '#');
-
-        // parse entities
-        for(int j=y-1; std::getline(of,line); --j)
-        {
-            for(int i=0; i < line.size(); ++i)
-            {
-                if(line[i] != ' ')
-                {
-                    map_entities.add(line[i], i, j);
-                }
-            }
-        }
-        of.close();
     }
 
     // parse warps
-    of.clear();
-    of.open(*(getContext().oFile) + WA_SUFFIX);
-    line = "";
-    if(of.is_open())
     {
-        while(std::getline(of,line))
+        Parser::Context c = p.parse(*(getContext().oFile) + WA_SUFFIX, Parser::warp);
+        if(c.success)
         {
-            if(line[0] == '#')
-                break;
-
-            char warp = line[0];
-
-            unsigned long space0 = line.find_first_of(" ");
-            unsigned long space1 = line.find_first_of(" ",space0+1);
-            if(space0 == std::string::npos || space1 == std::string::npos)
-            {
-                throw std::runtime_error("Invalid warps file detected.");
-            }
-
-            std::string substring = line.substr(space0+1,space1-space0-1);
-            int coord0;// = std::stoi(substring);
-            std::istringstream(substring) >> coord0;
-            substring = line.substr(space1+1, std::string::npos);
-            int coord1;// = std::stoi(substring);
-            std::istringstream(substring) >> coord1;
-
-            warp_destinations.add(warp, coord0, coord1);
+            warp_destinations = c.warpDestination;
+            map_warps = c.map;
         }
-
-        int y;
-        for(y=0; std::getline(of,line); ++y);
-
-        of.close();
-        of.clear();
-        of.open(*(getContext().oFile) + WA_SUFFIX);
-
-        while(std::getline(of,line) && line[0] != '#');
-
-        for(int j=y-1; std::getline(of,line); --j)
-        {
-            for(int i=0; i < line.size(); ++i)
-            {
-                if(line[i] != ' ')
-                {
-                    map_warps.add(line[i], i, j);
-                }
-            }
-        }
-        of.close();
     }
 
     // parse doors
-    of.clear();
-    of.open(*(getContext().oFile) + D_SUFFIX);
-    line = "";
-    if(of.is_open())
     {
-        int y;
-        for(y=0; std::getline(of,line); ++y);
-
-        of.close();
-        of.clear();
-        of.open(*(getContext().oFile) + D_SUFFIX);
-
-        for(int j=y-1; std::getline(of,line); --j)
-        {
-            for(int i=0; i < line.size(); ++i)
-            {
-                if(line[i] != ' ')
-                {
-                    map_doors.add(line[i],i,j);
-                }
-            }
-        }
-
-        of.close();
+        Parser::Context c = p.parse(*(getContext().oFile) + D_SUFFIX, Parser::door);
+        if(c.success)
+            map_doors = c.map;
     }
 
     // parse keys to doors
-    of.clear();
-    of.open(*(getContext().oFile) + DK_SUFFIX);
-    line = "";
-    if(of.is_open())
     {
-        while(std::getline(of,line))
+        Parser::Context c = p.parse(*(getContext().oFile) + DK_SUFFIX, Parser::key);
+        if(c.success)
         {
-            if(line[0] == '#')
-                break;
-
-            for(int x=1; x < line.size(); ++x)
-            {
-                if(line[x] != ' ')
-                {
-                    ktod.insert(std::pair<char,char>(line[0],line[x]));
-                    dtok.insert(std::pair<char,char>(line[x],line[0]));
-                }
-            }
+            ktod = c.ktod;
+            dtok = c.dtok;
+            map_keys = c.map;
         }
-
-        int y;
-        for(y=0; std::getline(of,line); ++y);
-
-        of.close();
-        of.clear();
-        of.open(*(getContext().oFile) + DK_SUFFIX);
-
-        while(std::getline(of,line) && line[0] != '#');
-
-        for(int j=y-1; std::getline(of,line); --j)
-        {
-            for(int i=0; i < line.size(); ++i)
-            {
-                if(line[i] != ' ')
-                {
-                    map_keys.add(line[i],i,j);
-                }
-            }
-        }
-
-        of.close();
     }
 
     // other initializations
@@ -450,7 +171,7 @@ warpSelection(NULL)
     sf::View cView;
     cView.setSize(getContext().window->getView().getSize());
     cView.setCenter(getContext().window->getView().getCenter());
-    cView.move(0,-600.f);
+//    cView.move(0,-600.f);
     getContext().window->setView(cView);
 
     adjLine[0].color = sf::Color::Red;
@@ -511,7 +232,7 @@ void EditState::draw()
     // draw layer0
     if(currentMode != Mode::layer1 && currentMode != Mode::layer2)
     {
-        for(int y=0; y < map_layer0.getMaxSize().second; ++y)
+        for(int y=map_layer0.getMinSize().second; y <= map_layer0.getMaxSize().second; ++y)
         {
             auto row = map_layer0.getRow(y);
             for(auto rowIter = row.begin(); rowIter != row.end(); ++rowIter)
@@ -520,7 +241,7 @@ void EditState::draw()
                 left = pair.first * tsize;
                 top = pair.second * tsize;
                 sheet.setTextureRect(sf::IntRect(left, top, tsize, tsize));
-                sheet.setPosition(rowIter->x * tsize, -rowIter->y * tsize - tsize);
+                sheet.setPosition(rowIter->x * tsize, rowIter->y * tsize);
                 getContext().window->draw(sheet);
             }
         }
@@ -529,7 +250,7 @@ void EditState::draw()
     // draw layer1
     if(currentMode != Mode::layer0 && currentMode != Mode::layer2)
     {
-        for(int y=0; y < map_layer1.getMaxSize().second; ++y)
+        for(int y=map_layer1.getMinSize().second; y <= map_layer1.getMaxSize().second; ++y)
         {
             auto row = map_layer1.getRow(y);
             for(auto rowIter = row.begin(); rowIter != row.end(); ++rowIter)
@@ -538,7 +259,7 @@ void EditState::draw()
                 left = pair.first * tsize;
                 top = pair.second * tsize;
                 sheet.setTextureRect(sf::IntRect(left, top, tsize, tsize));
-                sheet.setPosition(rowIter->x * tsize, -rowIter->y * tsize - tsize);
+                sheet.setPosition(rowIter->x * tsize, rowIter->y * tsize);
                 getContext().window->draw(sheet);
             }
         }
@@ -547,7 +268,7 @@ void EditState::draw()
     // draw layer2
     if(currentMode != Mode::layer0 && currentMode != Mode::layer1)
     {
-        for(int y=0; y < map_layer2.getMaxSize().second; ++y)
+        for(int y=map_layer2.getMinSize().second; y <= map_layer2.getMaxSize().second; ++y)
         {
             auto row = map_layer2.getRow(y);
             for(auto rowIter = row.begin(); rowIter != row.end(); ++rowIter)
@@ -556,7 +277,7 @@ void EditState::draw()
                 left = pair.first * tsize;
                 top = pair.second * tsize;
                 sheet.setTextureRect(sf::IntRect(left, top, tsize, tsize));
-                sheet.setPosition(rowIter->x * tsize, -rowIter->y * tsize - tsize);
+                sheet.setPosition(rowIter->x * tsize, rowIter->y * tsize);
                 getContext().window->draw(sheet);
             }
         }
@@ -565,15 +286,13 @@ void EditState::draw()
     // draw waypoints
     if(currentMode == Mode::waypoint || currentMode == Mode::ewconnect)
     {
-        for(int j=0; j < map_waypoint.getMaxSize().second; ++j)
+        for(int j=map_waypoint.getMinSize().second; j <= map_waypoint.getMaxSize().second; ++j)
         {
-            for(int i=0; i < map_waypoint.getMaxSize().first; ++i)
+            auto row = map_waypoint.getRow(j);
+            for(auto riter = row.begin(); riter != row.end(); ++riter)
             {
-                if(map_waypoint.get(i,j) != NULL)
-                {
-                    waypointMarker.setPosition((float)(i * tsize),(float)(-j * tsize - tsize));
-                    getContext().window->draw(waypointMarker);
-                }
+                waypointMarker.setPosition((float)(riter->x * tsize),(float)(riter->y * tsize));
+                getContext().window->draw(waypointMarker);
             }
         }
 
@@ -587,32 +306,18 @@ void EditState::draw()
             sf::Vector2i aCoords(-1,-1);
             sf::Vector2i bCoords(-1,-1);
 
-            for(int j=0; j < map_waypoint.getMaxSize().second; ++j)
-            {
-                auto row = map_waypoint.getRow(j);
-                for(auto riter = row.begin(); riter != row.end(); ++riter)
-                {
-                    if(riter->obj == a)
-                    {
-                        aCoords.x = riter->x;
-                        aCoords.y = riter->y;
-                    }
-                    else if(riter->obj == b)
-                    {
-                        bCoords.x = riter->x;
-                        bCoords.y = riter->y;
-                    }
-                    if(aCoords.x != -1 && bCoords.x != -1)
-                        break;
-                }
-                if(aCoords.x != -1 && bCoords.x != -1)
-                    break;
-            }
+            auto pair = map_waypoint.get(a);
+            aCoords.x = pair.first;
+            aCoords.y = pair.second;
+
+            pair = map_waypoint.get(b);
+            bCoords.x = pair.first;
+            bCoords.y = pair.second;
 
             adjLine[0].position.x = (float) (aCoords.x * tsize) + ((float)tsize)/2.0f;
-            adjLine[0].position.y = (float) (-aCoords.y * tsize) - ((float)tsize)/2.0f;
+            adjLine[0].position.y = (float) (aCoords.y * tsize) + ((float)tsize)/2.0f;
             adjLine[1].position.x = (float) (bCoords.x * tsize) + ((float)tsize)/2.0f;
-            adjLine[1].position.y = (float) (-bCoords.y * tsize) - ((float)tsize)/2.0f;
+            adjLine[1].position.y = (float) (bCoords.y * tsize) + ((float)tsize)/2.0f;
             getContext().window->draw(adjLine);
         }
 
@@ -623,7 +328,7 @@ void EditState::draw()
             sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
 
             adjLine[0].position.x = (float) (linkSelection.x * tsize) + ((float)tsize)/2.0f;
-            adjLine[0].position.y = (float) (-linkSelection.y * tsize) - ((float)tsize)/2.0f;
+            adjLine[0].position.y = (float) (linkSelection.y * tsize) + ((float)tsize)/2.0f;
             adjLine[1].position = gpos;
             getContext().window->draw(adjLine);
         }
@@ -632,15 +337,13 @@ void EditState::draw()
     // draw obstacles
     if(currentMode == Mode::obstacles)
     {
-        for(int j=0; j < map_obstacles.getMaxSize().second; ++j)
+        for(int j=map_obstacles.getMinSize().second; j <= map_obstacles.getMaxSize().second; ++j)
         {
-            for(int i=0; i < map_obstacles.getMaxSize().first; ++i)
+            auto row = map_obstacles.getRow(j);
+            for(auto riter = row.begin(); riter != row.end(); ++riter)
             {
-                if(map_obstacles.get(i,j) != NULL)
-                {
-                    obstacleIndicator.setPosition((float)(i * tsize),(float)(-j * tsize - tsize));
-                    getContext().window->draw(obstacleIndicator);
-                }
+                obstacleIndicator.setPosition((float)(riter->x * tsize),(float)(riter->y * tsize));
+                getContext().window->draw(obstacleIndicator);
             }
         }
     }
@@ -648,17 +351,14 @@ void EditState::draw()
     // draw entities
     if(currentMode == Mode::entities || currentMode == Mode::ewconnect)
     {
-        for(int j=0; j < map_entities.getMaxSize().second; ++j)
+        for(int j=map_entities.getMinSize().second; j <= map_entities.getMaxSize().second; ++j)
         {
-            for(int i=0; i < map_entities.getMaxSize().first; ++i)
+            auto row = map_entities.getRow(j);
+            for(auto riter = row.begin(); riter != row.end(); ++riter)
             {
-                char* c = map_entities.get(i,j);
-                if(c != NULL)
-                {
-                    entitySymbol.setString(*c);
-                    entitySymbol.setPosition((float)(i * tsize), (float)(-j * tsize - tsize));
-                    getContext().window->draw(entitySymbol);
-                }
+                entitySymbol.setString(riter->obj);
+                entitySymbol.setPosition((float)(riter->x * tsize), (float)(riter->y * tsize));
+                getContext().window->draw(entitySymbol);
             }
         }
     }
@@ -675,44 +375,18 @@ void EditState::draw()
                 sf::Vector2i ecoords(-1,-1);
                 sf::Vector2i wcoords(-1,-1);
 
-                // TODO make following more efficient
-                std::list<RowEntry<char> > row;
-                for(int j=0; j < map_entities.getMaxSize().second; ++j)
-                {
-                    row = map_entities.getRow(j);
-                    for(auto riter = row.begin(); riter != row.end(); ++riter)
-                    {
-                        if(riter->obj == entity)
-                        {
-                            ecoords.x = riter->x;
-                            ecoords.y = riter->y;
-                            break;
-                        }
-                    }
-                    if(ecoords.x != -1)
-                        break;
-                }
+                auto pair = map_entities.get(entity);
+                ecoords.x = pair.first;
+                ecoords.y = pair.second;
 
-                for(int j=0; j < map_waypoint.getMaxSize().second; ++j)
-                {
-                    row = map_waypoint.getRow(j);
-                    for(auto riter = row.begin(); riter != row.end(); ++riter)
-                    {
-                        if(riter->obj == waypoint)
-                        {
-                            wcoords.x = riter->x;
-                            wcoords.y = riter->y;
-                            break;
-                        }
-                    }
-                    if(wcoords.x != -1)
-                        break;
-                }
+                pair = map_waypoint.get(waypoint);
+                wcoords.x = pair.first;
+                wcoords.y = pair.second;
 
                 ewLine[0].position.x = ((float) ecoords.x * tsize) + ((float)tsize)/2.0f;
-                ewLine[0].position.y = ((float) -ecoords.y * tsize) - ((float)tsize)/2.0f;
+                ewLine[0].position.y = ((float) ecoords.y * tsize) + ((float)tsize)/2.0f;
                 ewLine[1].position.x = ((float) wcoords.x * tsize) + ((float)tsize)/2.0f;
-                ewLine[1].position.y = ((float) -wcoords.y * tsize) - ((float)tsize)/2.0f;
+                ewLine[1].position.y = ((float) wcoords.y * tsize) + ((float)tsize)/2.0f;
                 
                 getContext().window->draw(ewLine);
             }
@@ -724,7 +398,7 @@ void EditState::draw()
             sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
 
             ewLine[0].position.x = (float) (entitySelection.x * tsize) + ((float)tsize)/2.0f;
-            ewLine[0].position.y = (float) (-entitySelection.y * tsize) - ((float)tsize)/2.0f;
+            ewLine[0].position.y = (float) (entitySelection.y * tsize) + ((float)tsize)/2.0f;
             ewLine[1].position = gpos;
 
             getContext().window->draw(ewLine);
@@ -734,17 +408,14 @@ void EditState::draw()
     // draw warps
     if(currentMode == Mode::warps)
     {
-        for(int j=0; j < map_warps.getMaxSize().second; ++j)
+        for(int j=map_warps.getMinSize().second; j <= map_warps.getMaxSize().second; ++j)
         {
-            for(int i=0; i < map_warps.getMaxSize().first; ++i)
+            auto row = map_warps.getRow(j);
+            for(auto riter = row.begin(); riter != row.end(); ++riter)
             {
-                char* c = map_warps.get(i,j);
-                if(c != NULL)
-                {
-                    warpSymbol.setString(*c);
-                    warpSymbol.setPosition((float)(i * tsize), (float)(-j * tsize - tsize));
-                    getContext().window->draw(warpSymbol);
-                }
+                warpSymbol.setString(riter->obj);
+                warpSymbol.setPosition((float)(riter->x * tsize), (float)(riter->y * tsize));
+                getContext().window->draw(warpSymbol);
             }
         }
 
@@ -759,28 +430,25 @@ void EditState::draw()
                 throw std::runtime_error("Unable to find existing warp coordinates.");
 
             warpLine[0].position.x = (float) (coords.first * tsize) + ((float)tsize)/2.0f;
-            warpLine[0].position.y = (float) (-coords.second * tsize) - ((float)tsize)/2.0f;
+            warpLine[0].position.y = (float) (coords.second * tsize) + ((float)tsize)/2.0f;
             warpLine[1].position = gpos;
 
             getContext().window->draw(warpLine);
         }
 
-        for(int j=0; j < warp_destinations.getMaxSize().second; ++j)
+        for(int j=warp_destinations.getMinSize().second; j <= warp_destinations.getMaxSize().second; ++j)
         {
-            for(int i=0; i < warp_destinations.getMaxSize().first; ++i)
+            auto row = warp_destinations.getRow(j);
+            for(auto riter = row.begin(); riter != row.end(); ++riter)
             {
-                char* c = warp_destinations.get(i,j);
-                if(c != NULL)
-                {
-                    auto coords = map_warps.get(*c);
+                auto coords = map_warps.get(riter->obj);
 
-                    warpLine[0].position.x = (float) (coords.first * tsize) + ((float)tsize)/2.0f;
-                    warpLine[0].position.y = (float) (-coords.second * tsize) - ((float)tsize)/2.0f;
-                    warpLine[1].position.x = (float) (i * tsize) + ((float)tsize)/2.0f;
-                    warpLine[1].position.y = (float) (-j * tsize) - ((float)tsize)/2.0f;
+                warpLine[0].position.x = (float) (coords.first * tsize) + ((float)tsize)/2.0f;
+                warpLine[0].position.y = (float) (coords.second * tsize) + ((float)tsize)/2.0f;
+                warpLine[1].position.x = (float) (riter->x * tsize) + ((float)tsize)/2.0f;
+                warpLine[1].position.y = (float) (riter->y * tsize) + ((float)tsize)/2.0f;
 
-                    getContext().window->draw(warpLine);
-                }
+                getContext().window->draw(warpLine);
             }
         }
     }
@@ -788,17 +456,14 @@ void EditState::draw()
     // draw doors
     if(currentMode == Mode::door || currentMode == Mode::key)
     {
-        for(int j=0; j < map_doors.getMaxSize().second; ++j)
+        for(int j=map_doors.getMinSize().second; j <= map_doors.getMaxSize().second; ++j)
         {
-            for(int i=0; i < map_doors.getMaxSize().first; ++i)
+            auto row = map_doors.getRow(j);
+            for(auto riter = row.begin(); riter != row.end(); ++riter)
             {
-                char* c = map_doors.get(i,j);
-                if(c != NULL)
-                {
-                    doorSymbol.setString(*c);
-                    doorSymbol.setPosition((float) (i * tsize), (float) (-j * tsize - tsize));
-                    getContext().window->draw(doorSymbol);
-                }
+                doorSymbol.setString(riter->obj);
+                doorSymbol.setPosition((float)(riter->x * tsize), (float)(riter->y * tsize));
+                getContext().window->draw(doorSymbol);
             }
         }
     }
@@ -806,17 +471,14 @@ void EditState::draw()
     // draw keys
     if(currentMode == Mode::key)
     {
-        for(int j=0; j < map_keys.getMaxSize().second; ++j)
+        for(int j=map_keys.getMinSize().second; j <= map_keys.getMaxSize().second; ++j)
         {
-            for(int i=0; i < map_keys.getMaxSize().first; ++i)
+            auto row = map_keys.getRow(j);
+            for(auto riter = row.begin(); riter != row.end(); ++riter)
             {
-                char* c = map_keys.get(i,j);
-                if(c != NULL)
-                {
-                    keySymbol.setString(*c);
-                    keySymbol.setPosition((float) (i*tsize), (float) (-j*tsize-tsize));
-                    getContext().window->draw(keySymbol);
-                }
+                keySymbol.setString(riter->obj);
+                keySymbol.setPosition((float)(riter->x * tsize), (float)(riter->y * tsize));
+                getContext().window->draw(keySymbol);
             }
         }
 
@@ -826,9 +488,9 @@ void EditState::draw()
             auto dcoords = map_doors.get(iter->second);
 
             dkLine[0].position.x = (float) (kcoords.first * tsize) + ((float)tsize)/2.0f;
-            dkLine[0].position.y = (float) (-kcoords.second * tsize) - ((float)tsize)/2.0f;
+            dkLine[0].position.y = (float) (kcoords.second * tsize) + ((float)tsize)/2.0f;
             dkLine[1].position.x = (float) (dcoords.first * tsize) + ((float)tsize)/2.0f;
-            dkLine[1].position.y = (float) (-dcoords.second * tsize) - ((float)tsize)/2.0f;
+            dkLine[1].position.y = (float) (dcoords.second * tsize) + ((float)tsize)/2.0f;
 
             getContext().window->draw(dkLine);
         }
@@ -841,7 +503,7 @@ void EditState::draw()
             auto kcoords = map_keys.get(*keySelection);
 
             dkLine[0].position.x = (float) (kcoords.first * tsize) + ((float)tsize)/2.0f;
-            dkLine[0].position.y = (float) (-kcoords.second * tsize) - ((float)tsize)/2.0f;
+            dkLine[0].position.y = (float) (kcoords.second * tsize) + ((float)tsize)/2.0f;
             dkLine[1].position = gpos;
 
             getContext().window->draw(dkLine);
@@ -919,8 +581,6 @@ bool EditState::update()
     int t = (int)( getContext().window->getView().getCenter().y -
                    getContext().window->getView().getSize().y / 2.f);
 
-    t = -t - 600;
-
     l /= tsize;
     t /= tsize;
 
@@ -934,7 +594,11 @@ bool EditState::update()
         sf::Vector2i mpos = sf::Mouse::getPosition(*(getContext().window));
         sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
         int x = (int)(gpos.x / tsize);
-        int y = -(int)(gpos.y / tsize);
+        int y = (int)(gpos.y / tsize);
+        if(gpos.x < 0.0f)
+            --x;
+        if(gpos.y < 0.0f)
+            --y;
 
         if(currentMode == Mode::layer0)
             map_layer0.remove(x,y);
@@ -1026,96 +690,97 @@ bool EditState::update()
         sf::Vector2i mpos = sf::Mouse::getPosition(*(getContext().window));
         sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
         int x = (int)(gpos.x / tsize);
-        int y = -(int)(gpos.y / tsize);
-        if(y >= 0 && x >= 0)
+        int y = (int)(gpos.y / tsize);
+        if(gpos.x < 0.0f)
+            --x;
+        if(gpos.y < 0.0f)
+            --y;
+        if(currentMode == Mode::layer0 && selChar != ' ')
         {
-            if(currentMode == Mode::layer0 && selChar != ' ')
+            if(map_layer0.get(x,y) != NULL)
+                map_layer0.remove(x,y);
+            map_layer0.add(selChar, x, y);
+        }
+        else if(currentMode == Mode::layer1 && selChar != ' ')
+        {
+            if(map_layer1.get(x,y) != NULL)
+                map_layer1.remove(x,y);
+            map_layer1.add(selChar, x, y);
+        }
+        else if(currentMode == Mode::layer2 && selChar != ' ')
+        {
+            if(map_layer2.get(x,y) != NULL)
+                map_layer2.remove(x,y);
+            map_layer2.add(selChar, x, y);
+        }
+        else if(currentMode == Mode::waypoint)
+        {
+            if(map_waypoint.get(x,y) == NULL)
             {
-                if(map_layer0.get(x,y) != NULL)
-                    map_layer0.remove(x,y);
-                map_layer0.add(selChar, x, y);
-            }
-            else if(currentMode == Mode::layer1 && selChar != ' ')
-            {
-                if(map_layer1.get(x,y) != NULL)
-                    map_layer1.remove(x,y);
-                map_layer1.add(selChar, x, y);
-            }
-            else if(currentMode == Mode::layer2 && selChar != ' ')
-            {
-                if(map_layer2.get(x,y) != NULL)
-                    map_layer2.remove(x,y);
-                map_layer2.add(selChar, x, y);
-            }
-            else if(currentMode == Mode::waypoint)
-            {
-                if(map_waypoint.get(x,y) == NULL)
+                int i;
+                for(i=0; i < validChars.size(); ++i)
                 {
-                    int i;
-                    for(i=0; i < validChars.size(); ++i)
+                    if(wm.getCurrentChars().find(validChars[i]) == std::string::npos)
                     {
-                        if(wm.getCurrentChars().find(validChars[i]) == std::string::npos)
-                        {
-                            selChar = validChars[i];
-                            break;
-                        }
-                    }
-                    if(i != validChars.size())
-                    {
-                        map_waypoint.add(selChar, x, y);
-                        wm.addWaypoint(selChar);
+                        selChar = validChars[i];
+                        break;
                     }
                 }
-            }
-            else if(currentMode == Mode::obstacles)
-            {
-                map_obstacles.add('o', x, y);
-            }
-            else if(currentMode == Mode::entities)
-            {
-                if(map_entities.get(x,y) != NULL)
-                    map_entities.remove(x,y);
-                map_entities.add(validChars[eSymbolSelection], x, y);
-            }
-            else if(currentMode == Mode::warps)
-            {
-                if(map_warps.get(x,y) != NULL)
+                if(i != validChars.size())
                 {
-                    map_warps.remove(x,y);
-                    warp_destinations.remove(x,y);
+                    map_waypoint.add(selChar, x, y);
+                    wm.addWaypoint(selChar);
                 }
-                map_warps.add(validChars[eSymbolSelection], x, y);
             }
-            else if(currentMode == Mode::door)
+        }
+        else if(currentMode == Mode::obstacles)
+        {
+            map_obstacles.add('o', x, y);
+        }
+        else if(currentMode == Mode::entities)
+        {
+            if(map_entities.get(x,y) != NULL)
+                map_entities.remove(x,y);
+            map_entities.add(validChars[eSymbolSelection], x, y);
+        }
+        else if(currentMode == Mode::warps)
+        {
+            if(map_warps.get(x,y) != NULL)
             {
-                char* d = map_doors.get(x,y);
-                if(d != NULL)
-                {
-                    auto iter = dtok.find(*d);
-                    if(iter != dtok.end())
-                    {
-                        dtok.erase(*d);
-                        ktod.erase(iter->second);
-                    }
-                    map_doors.remove(x,y);
-                }
-                map_doors.add(validChars[eSymbolSelection], x, y);
+                map_warps.remove(x,y);
+                warp_destinations.remove(x,y);
             }
-            else if(currentMode == Mode::key)
+            map_warps.add(validChars[eSymbolSelection], x, y);
+        }
+        else if(currentMode == Mode::door)
+        {
+            char* d = map_doors.get(x,y);
+            if(d != NULL)
             {
-                char* k = map_keys.get(x,y);
-                if(k != NULL)
+                auto iter = dtok.find(*d);
+                if(iter != dtok.end())
                 {
-                    auto iter = ktod.find(*k);
-                    if(iter != ktod.end())
-                    {
-                        ktod.erase(*k);
-                        dtok.erase(iter->second);
-                    }
-                    map_keys.remove(x,y);
+                    dtok.erase(*d);
+                    ktod.erase(iter->second);
                 }
-                map_keys.add(validChars[eSymbolSelection], x, y);
+                map_doors.remove(x,y);
             }
+            map_doors.add(validChars[eSymbolSelection], x, y);
+        }
+        else if(currentMode == Mode::key)
+        {
+            char* k = map_keys.get(x,y);
+            if(k != NULL)
+            {
+                auto iter = ktod.find(*k);
+                if(iter != ktod.end())
+                {
+                    ktod.erase(*k);
+                    dtok.erase(iter->second);
+                }
+                map_keys.remove(x,y);
+            }
+            map_keys.add(validChars[eSymbolSelection], x, y);
         }
     }
 
@@ -1155,26 +820,114 @@ bool EditState::handleEvent(const sf::Event& event)
         deleting = false;
     else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Return)
     {
-        // get max height
-        int my=0;
-        if(map_layer0.getMaxSize().second > my)
-            my = map_layer0.getMaxSize().second;
-        if(map_layer1.getMaxSize().second > my)
-            my = map_layer1.getMaxSize().second;
-        if(map_layer2.getMaxSize().second > my)
-            my = map_layer2.getMaxSize().second;
-        if(map_waypoint.getMaxSize().second > my)
-            my = map_waypoint.getMaxSize().second;
-        if(map_obstacles.getMaxSize().second > my)
-            my = map_obstacles.getMaxSize().second;
-        if(map_entities.getMaxSize().second > my)
-            my = map_entities.getMaxSize().second;
-        if(map_warps.getMaxSize().second > my)
-            my = map_warps.getMaxSize().second;
-        if(map_doors.getMaxSize().second > my)
-            my = map_doors.getMaxSize().second;
-        if(map_keys.getMaxSize().second > my)
-            my = map_keys.getMaxSize().second;
+        // get max/min
+        int maxX;
+        int maxY;
+        int minX;
+        int minY;
+
+        maxX = map_layer0.getMaxSize().first;
+        maxY = map_layer0.getMaxSize().second;
+        minX = map_layer0.getMinSize().first;
+        minY = map_layer0.getMinSize().second;
+
+        if(map_layer1.getSize() != 0)
+        {
+            if(maxX < map_layer1.getMaxSize().first)
+                maxX = map_layer1.getMaxSize().first;
+            if(maxY < map_layer1.getMaxSize().second)
+                maxY = map_layer1.getMaxSize().second;
+            if(minX > map_layer1.getMinSize().first)
+                minX = map_layer1.getMinSize().first;
+            if(minY > map_layer1.getMinSize().second)
+                minY = map_layer1.getMinSize().second;
+        }
+
+        if(map_layer2.getSize() != 0)
+        {
+            if(maxX < map_layer2.getMaxSize().first)
+                maxX = map_layer2.getMaxSize().first;
+            if(maxY < map_layer2.getMaxSize().second)
+                maxY = map_layer2.getMaxSize().second;
+            if(minX > map_layer2.getMinSize().first)
+                minX = map_layer2.getMinSize().first;
+            if(minY > map_layer2.getMinSize().second)
+                minY = map_layer2.getMinSize().second;
+        }
+
+        if(map_waypoint.getSize() != 0)
+        {
+            if(maxX < map_waypoint.getMaxSize().first)
+                maxX = map_waypoint.getMaxSize().first;
+            if(maxY < map_waypoint.getMaxSize().second)
+                maxY = map_waypoint.getMaxSize().second;
+            if(minX > map_waypoint.getMinSize().first)
+                minX = map_waypoint.getMinSize().first;
+            if(minY > map_waypoint.getMinSize().second)
+                minY = map_waypoint.getMinSize().second;
+        }
+
+        if(map_obstacles.getSize() != 0)
+        {
+            if(maxX < map_obstacles.getMaxSize().first)
+                maxX = map_obstacles.getMaxSize().first;
+            if(maxY < map_obstacles.getMaxSize().second)
+                maxY = map_obstacles.getMaxSize().second;
+            if(minX > map_obstacles.getMinSize().first)
+                minX = map_obstacles.getMinSize().first;
+            if(minY > map_obstacles.getMinSize().second)
+                minY = map_obstacles.getMinSize().second;
+        }
+
+        if(map_entities.getSize() != 0)
+        {
+            if(maxX < map_entities.getMaxSize().first)
+                maxX = map_entities.getMaxSize().first;
+            if(maxY < map_entities.getMaxSize().second)
+                maxY = map_entities.getMaxSize().second;
+            if(minX > map_entities.getMinSize().first)
+                minX = map_entities.getMinSize().first;
+            if(minY > map_entities.getMinSize().second)
+                minY = map_entities.getMinSize().second;
+        }
+
+        if(map_warps.getSize() != 0)
+        {
+            if(maxX < map_warps.getMaxSize().first)
+                maxX = map_warps.getMaxSize().first;
+            if(maxY < map_warps.getMaxSize().second)
+                maxY = map_warps.getMaxSize().second;
+            if(minX > map_warps.getMinSize().first)
+                minX = map_warps.getMinSize().first;
+            if(minY > map_warps.getMinSize().second)
+                minY = map_warps.getMinSize().second;
+        }
+
+        if(map_doors.getSize() != 0)
+        {
+            if(maxX < map_doors.getMaxSize().first)
+                maxX = map_doors.getMaxSize().first;
+            if(maxY < map_doors.getMaxSize().second)
+                maxY = map_doors.getMaxSize().second;
+            if(minX > map_doors.getMinSize().first)
+                minX = map_doors.getMinSize().first;
+            if(minY > map_doors.getMinSize().second)
+                minY = map_doors.getMinSize().second;
+        }
+
+        if(map_keys.getSize() != 0)
+        {
+            if(maxX < map_keys.getMaxSize().first)
+                maxX = map_keys.getMaxSize().first;
+            if(maxY < map_keys.getMaxSize().second)
+                maxY = map_keys.getMaxSize().second;
+            if(minX > map_keys.getMinSize().first)
+                minX = map_keys.getMinSize().first;
+            if(minY > map_keys.getMinSize().second)
+                minY = map_keys.getMinSize().second;
+        }
+
+        std::cout << minX << " " << minY << " " << maxX << " " << maxY << "\n"; //TODO DEBUG
 
         std::fstream of;
 
@@ -1188,17 +941,15 @@ bool EditState::handleEvent(const sf::Event& event)
             of.open(*(getContext().oFile) + L0_SUFFIX, std::ios::trunc | std::ios::out);
         }
 
-        for(int j = my; j > map_layer0.getMaxSize().second; --j)
-            of << '\n';
-        for(int y = map_layer0.getMaxSize().second - 1; y >= 0; --y)
+        for(int y=minY; y <= map_layer0.getMaxSize().second; ++y)
         {
-            for(int x=0; x < map_layer0.getMaxSize().first; ++x)
+            for(int x=minX; x <= map_layer0.getMaxSize().first; ++x)
             {
                 char* c = map_layer0.get(x,y);
                 if(c == NULL)
                     of << ' ';
                 else
-                    of << (*c);
+                    of << *c;
             }
             of << '\n';
         }
@@ -1217,17 +968,15 @@ bool EditState::handleEvent(const sf::Event& event)
             of.open(*(getContext().oFile) + L1_SUFFIX, std::ios::trunc | std::ios::out);
         }
 
-        for(int j = my; j > map_layer1.getMaxSize().second; --j)
-            of << '\n';
-        for(int y = map_layer1.getMaxSize().second - 1; y >= 0; --y)
+        for(int y=minY; y <= map_layer1.getMaxSize().second; ++y)
         {
-            for(int x=0; x < map_layer1.getMaxSize().first; ++x)
+            for(int x=minX; x <= map_layer1.getMaxSize().first; ++x)
             {
                 char* c = map_layer1.get(x,y);
                 if(c == NULL)
                     of << ' ';
                 else
-                    of << (*c);
+                    of << *c;
             }
             of << '\n';
         }
@@ -1245,17 +994,15 @@ bool EditState::handleEvent(const sf::Event& event)
             of.open(*(getContext().oFile) + L2_SUFFIX, std::ios::trunc | std::ios::out);
         }
 
-        for(int j = my; j > map_layer2.getMaxSize().second; --j)
-            of << '\n';
-        for(int y = map_layer2.getMaxSize().second - 1; y >= 0; --y)
+        for(int y=minY; y <= map_layer2.getMaxSize().second; ++y)
         {
-            for(int x=0; x < map_layer2.getMaxSize().first; ++x)
+            for(int x=minX; x <= map_layer2.getMaxSize().first; ++x)
             {
                 char* c = map_layer2.get(x,y);
                 if(c == NULL)
                     of << ' ';
                 else
-                    of << (*c);
+                    of << *c;
             }
             of << '\n';
         }
@@ -1288,17 +1035,15 @@ bool EditState::handleEvent(const sf::Event& event)
 
         of << "#\n";
 
-        for(int j = my; j > map_waypoint.getMaxSize().second; --j)
-            of << '\n';
-        for(int y = map_waypoint.getMaxSize().second - 1; y >= 0; --y)
+        for(int y=minY; y <= map_waypoint.getMaxSize().second; ++y)
         {
-            for(int x=0; x < map_waypoint.getMaxSize().first; ++x)
+            for(int x=minX; x <= map_waypoint.getMaxSize().first; ++x)
             {
                 char* c = map_waypoint.get(x,y);
                 if(c == NULL)
                     of << ' ';
                 else
-                    of << (*c);
+                    of << *c;
             }
             of << '\n';
         }
@@ -1316,15 +1061,13 @@ bool EditState::handleEvent(const sf::Event& event)
             of.close();
             of.open(*(getContext().oFile) + O_SUFFIX, std::ios::trunc | std::ios::out);
         }
+        of.flush();
 
-        for(int j = my; j > map_obstacles.getMaxSize().second; --j)
-            of << '\n';
-        for(int y = map_obstacles.getMaxSize().second - 1; y >= 0; --y)
+        for(int y=minY; y <= map_obstacles.getMaxSize().second; ++y)
         {
-            for(int x=0; x < map_obstacles.getMaxSize().first; ++x)
+            for(int x=minX; x <= map_obstacles.getMaxSize().first; ++x)
             {
-                char* c = map_obstacles.get(x,y);
-                if(c == NULL)
+                if(map_obstacles.get(x,y) == NULL)
                     of << ' ';
                 else
                     of << 'o';
@@ -1332,7 +1075,6 @@ bool EditState::handleEvent(const sf::Event& event)
             of << '\n';
         }
 
-        of.flush();
         of.close();
 
         // write entities
@@ -1359,11 +1101,9 @@ bool EditState::handleEvent(const sf::Event& event)
 
         of << "#\n";
 
-        for(int j = my; j > map_entities.getMaxSize().second; --j)
-            of << '\n';
-        for(int y = map_entities.getMaxSize().second - 1; y >= 0; --y)
+        for(int y=minY; y <= map_entities.getMaxSize().second; ++y)
         {
-            for(int x=0; x < map_entities.getMaxSize().first; ++x)
+            for(int x=minX; x <= map_entities.getMaxSize().first; ++x)
             {
                 char* c = map_entities.get(x,y);
                 if(c == NULL)
@@ -1388,22 +1128,20 @@ bool EditState::handleEvent(const sf::Event& event)
             of.open(*(getContext().oFile) + WA_SUFFIX, std::ios::trunc | std::ios::out);
         }
 
-        for(int j=0; j < warp_destinations.getMaxSize().second; ++j)
+        for(int j=warp_destinations.getMinSize().second; j <= warp_destinations.getMaxSize().second; ++j)
         {
             auto row = warp_destinations.getRow(j);
             for(auto riter = row.begin(); riter != row.end(); ++riter)
             {
-                of << riter->obj << " " << riter->x << " " << riter->y << "\n";
+                of << riter->obj << " " << riter->x - minX<< " " << riter->y - minY << "\n";
             }
         }
 
         of << "#\n";
 
-        for(int j = my; j > map_warps.getMaxSize().second; --j)
-            of << '\n';
-        for(int y = map_warps.getMaxSize().second - 1; y >= 0; --y)
+        for(int y=minY; y <= map_warps.getMaxSize().second; ++y)
         {
-            for(int x=0; x < map_warps.getMaxSize().first; ++x)
+            for(int x=minX; x <= map_warps.getMaxSize().first; ++x)
             {
                 char* c = map_warps.get(x,y);
                 if(c == NULL)
@@ -1428,11 +1166,9 @@ bool EditState::handleEvent(const sf::Event& event)
             of.open(*(getContext().oFile) + D_SUFFIX, std::ios::trunc | std::ios::out);
         }
 
-        for(int j=my; j > map_doors.getMaxSize().second; --j)
-            of << '\n';
-        for(int y=map_doors.getMaxSize().second - 1; y >=0; --y)
+        for(int y=minY; y <= map_doors.getMaxSize().second; ++y)
         {
-            for(int x=0; x < map_doors.getMaxSize().first; ++x)
+            for(int x=minX; x <= map_doors.getMaxSize().first; ++x)
             {
                 char* c = map_doors.get(x,y);
                 if(c == NULL)
@@ -1463,11 +1199,9 @@ bool EditState::handleEvent(const sf::Event& event)
         }
         of << "#\n";
 
-        for(int j=my; j > map_keys.getMaxSize().second; --j)
-            of << '\n';
-        for(int y = map_keys.getMaxSize().second - 1; y >= 0; --y)
+        for(int y=minY; y <= map_keys.getMaxSize().second; ++y)
         {
-            for(int x=0; x < map_keys.getMaxSize().first; ++x)
+            for(int x=minX; x <= map_keys.getMaxSize().first; ++x)
             {
                 char* c = map_keys.get(x,y);
                 if(c == NULL)
@@ -1625,7 +1359,11 @@ bool EditState::handleEvent(const sf::Event& event)
         sf::Vector2i mpos = sf::Mouse::getPosition(*(getContext().window));
         sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
         int x = (int)(gpos.x / tsize);
-        int y = -(int)(gpos.y / tsize);
+        int y = (int)(gpos.y / tsize);
+        if(gpos.x < 0.0f)
+            --x;
+        if(gpos.y < 0.0f)
+            --y;
 
         if(currentMode == Mode::waypoint)
         {

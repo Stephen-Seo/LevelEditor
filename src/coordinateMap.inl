@@ -29,6 +29,8 @@ template <class T>
 CoordinateMap<T>::CoordinateMap() :
 maxX(0),
 maxY(0),
+minX(0),
+minY(0),
 rows(),
 columns()
 {}
@@ -39,10 +41,25 @@ bool CoordinateMap<T>::add(T obj, int x, int y)
     if(get(x,y) != NULL)
         return false;
 
-    if(x+1 > maxX)
-        maxX = x+1;
-    if(y+1 > maxY)
-        maxY = y+1;
+    if(rows.size() == 0)
+    {
+        maxX = x;
+        minX = x;
+        maxY = y;
+        minY = y;
+    }
+    else
+    {
+        if(x > maxX)
+            maxX = x;
+        if(y > maxY)
+            maxY = y;
+
+        if(x < minX)
+            minX = x;
+        if(y < minY)
+            minY = y;
+    }
 
     RowEntry<T> re(obj, x, y);
     ColumnEntry<T> ce(obj, x, y);
@@ -82,6 +99,7 @@ bool CoordinateMap<T>::remove(int x, int y)
     if(deletedFromRows || deletedFromColumns)
     {
         decrementCheckMaxVals();
+        incrementCheckMinVals();
     }
     return deletedFromRows && deletedFromColumns;
 }
@@ -113,7 +131,10 @@ bool CoordinateMap<T>::remove(T obj)
     }
 
     if(deletedFromRows || deletedFromColumns)
+    {
         decrementCheckMaxVals();
+        incrementCheckMinVals();
+    }
 
     return deletedFromRows && deletedFromColumns;
 }
@@ -177,14 +198,43 @@ std::pair<int,int> CoordinateMap<T>::getMaxSize()
 }
 
 template <class T>
+std::pair<int,int> CoordinateMap<T>::getMinSize()
+{
+    return std::pair<int,int>(minX,minY);
+}
+
+template <class T>
+unsigned int CoordinateMap<T>::getSize()
+{
+    return rows.size();
+}
+
+template <class T>
 void CoordinateMap<T>::decrementCheckMaxVals()
 {
-    int x;
-    for(x = maxX-1; x >= 0 && getColumn(x).size() == 0; --x)
-    {}
-    maxX = x+1;
-    int y;
-    for(y = maxY-1; y >= 0 && getRow(y).size() == 0; --y)
-    {}
-    maxY = y+1;
+    auto citer = columns.rbegin();
+    if(citer != columns.rend())
+        maxX = citer->first;
+    else
+        maxX = 0;
+    auto riter = rows.rbegin();
+    if(riter != rows.rend())
+        maxY = riter->first;
+    else
+        maxY = 0;
+}
+
+template <class T>
+void CoordinateMap<T>::incrementCheckMinVals()
+{
+    auto citer = columns.begin();
+    if(citer != columns.end())
+        minX = citer->first;
+    else
+        minX = 0;
+    auto riter = rows.begin();
+    if(riter != rows.end())
+        minY = riter->first;
+    else
+        minY = 0;
 }
