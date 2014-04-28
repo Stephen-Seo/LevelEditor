@@ -5,6 +5,8 @@
 #define CS_PATH "..\\resources\\ClearSans-Regular.ttf"
 #elif defined(__WIN32__)
 #define CS_PATH "..\\resources\\ClearSans-Regular.ttf"
+#elif defined(__APPLE__)
+#include "utility.hpp"
 #else
 #define CS_PATH "../resources/ClearSans-Regular.ttf"
 #endif
@@ -20,6 +22,18 @@ stateStack(State::Context(window, twindow, textureHolder, fontHolder, oFile))
     window.setFramerateLimit(60);
     oFile = inPrefix;
 
+#if defined(__APPLE__)
+    std::string executablePath = getExecutableDirectory();
+    
+    std::cout << "checking " << executablePath + "ClearSans-Regular.ttf\n";
+    try{
+        fontHolder.load(Fonts::ClearSans, executablePath + "ClearSans-Regular.ttf");
+    } catch(std::runtime_error e)
+    {
+        std::cout << "checking " << executablePath + "../resources/ClearSans-Regular.ttf\n";
+        fontHolder.load(Fonts::ClearSans, executablePath + "../resources/ClearSans-Regular.ttf");
+    }
+#elif
     try{
         fontHolder.load(Fonts::ClearSans, "ClearSans-Regular.ttf");
     } catch(std::runtime_error e)
@@ -28,6 +42,7 @@ stateStack(State::Context(window, twindow, textureHolder, fontHolder, oFile))
         std::cout << "checking " << CS_PATH << "\n";
         fontHolder.load(Fonts::ClearSans, CS_PATH);
     }
+#endif
 
     if(oFile == "" && imgFile == "")
     {
@@ -35,6 +50,10 @@ stateStack(State::Context(window, twindow, textureHolder, fontHolder, oFile))
     }
     else
     {
+#if defined(__APPLE__)
+        oFile = executablePath + oFile;
+        imgFile = executablePath + imgFile;
+#endif
         textureHolder.load(Textures::TileSheet, imgFile);
         stateStack.pushState(States::EditState);
     }

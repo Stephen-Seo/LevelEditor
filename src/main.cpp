@@ -30,6 +30,8 @@ int main(int argc, char** argv) {
     std::string oFile = "";
     std::string imgFile = "";
 
+#if defined(__APPLE__)
+#else
     while(--argc > 0)
     {
         ++argv;
@@ -51,6 +53,7 @@ int main(int argc, char** argv) {
             return 0;
         }
     }
+#endif
 
     if(oFile != "" && imgFile != "")
         std::cout << "Using sheet \"" << imgFile << "\"\nUsing output \"" << oFile << "\"\n";

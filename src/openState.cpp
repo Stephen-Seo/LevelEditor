@@ -1,6 +1,10 @@
 
 #include "openState.hpp"
 
+#if defined(__APPLE__)
+#include "utility.hpp"
+#endif
+
 OpenState::OpenState(StateStack& stack, Context context)
 : State(stack,context),
 selection(Selection::None),
@@ -9,7 +13,9 @@ line(sf::Lines, 4),
 lshift(false),
 rshift(false)
 {
-
+#if defined(__APPLE__)
+    executablePath = getExecutableDirectory();
+#endif
 }
 
 void OpenState::draw()
@@ -171,6 +177,10 @@ void OpenState::backspace()
 void OpenState::startEditor()
 {
     std::cout << "Using sheet \"" << imgFile << "\"\nUsing output \"" << oFile << "\"\n";
+#if defined(__APPLE__)
+    imgFile = executablePath + imgFile;
+    oFile = executablePath + oFile;
+#endif
     getContext().oFile->insert(0,oFile);
     getContext().textures->load(Textures::TileSheet, imgFile);
     requestStackPop();
