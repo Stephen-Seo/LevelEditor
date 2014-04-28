@@ -1766,7 +1766,11 @@ bool EditState::handleEvent(const sf::Event& event)
         cView.zoom(0.5f);
         getContext().window->setView(cView);
     }
+#if defined(__APPLE__)
+    else if(event.type == sf::Event::TextEntered && event.text.unicode == 45)
+#else
     else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Dash)
+#endif
     {
         sf::View cView;
         cView.setSize(getContext().window->getView().getSize());
