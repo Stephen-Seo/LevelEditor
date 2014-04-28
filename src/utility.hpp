@@ -9,6 +9,8 @@
 #include <CoreFoundation/CoreFoundation.h>
 
 std::string getExecutableDirectory();
+
+std::string getResourcesDirectory();
 #endif
 
 #endif

@@ -23,17 +23,16 @@ stateStack(State::Context(window, twindow, textureHolder, fontHolder, oFile))
     oFile = inPrefix;
     
 #if defined(__APPLE__)
+    std::string resourcePath = getResourcesDirectory();
     std::string executablePath = getExecutableDirectory();
     
-    
-    
-    std::cout << "checking " << executablePath + "ClearSans-Regular.ttf\n";
     try{
-        fontHolder.load(Fonts::ClearSans, executablePath + "ClearSans-Regular.ttf");
+        std::cout << "checking " << resourcePath + "ClearSans-Regular.ttf\n";
+        fontHolder.load(Fonts::ClearSans, resourcePath + "ClearSans-Regular.ttf");
     } catch(std::runtime_error e)
     {
-        std::cout << "checking " << executablePath + "../resources/ClearSans-Regular.ttf\n";
-        fontHolder.load(Fonts::ClearSans, executablePath + "../resources/ClearSans-Regular.ttf");
+        std::cout << "checking " << executablePath + "ClearSans-Regular.ttf\n";
+        fontHolder.load(Fonts::ClearSans, executablePath + "ClearSans-Regular.ttf");
     }
 #else
     try{
