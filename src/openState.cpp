@@ -80,12 +80,6 @@ void OpenState::draw()
     info.setString("\tIf the tilesheet is \"tiles.png\", then the filename is the same.");
     info.setStyle(sf::Text::Regular);
     getContext().window->draw(info);
-    
-#if defined(__APPLE__)
-    info.setPosition(0.0f, 400.0f);
-    info.setString(executablePath);
-    getContext().window->draw(info);
-#endif
 }
 
 bool OpenState::update()
