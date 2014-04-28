@@ -1,6 +1,10 @@
 
 #include "openState.hpp"
 
+#if defined(__APPLE__)
+#include "utility.hpp"
+#endif
+
 OpenState::OpenState(StateStack& stack, Context context)
 : State(stack,context),
 selection(Selection::None),
@@ -9,7 +13,9 @@ line(sf::Lines, 4),
 lshift(false),
 rshift(false)
 {
-
+#if defined(__APPLE__)
+    executablePath = getExecutableDirectory();
+#endif
 }
 
 void OpenState::draw()
@@ -74,6 +80,12 @@ void OpenState::draw()
     info.setString("\tIf the tilesheet is \"tiles.png\", then the filename is the same.");
     info.setStyle(sf::Text::Regular);
     getContext().window->draw(info);
+    
+#if defined(__APPLE__)
+    info.setPosition(0.0f, 400.0f);
+    info.setString(executablePath);
+    getContext().window->draw(info);
+#endif
 }
 
 bool OpenState::update()
@@ -171,6 +183,10 @@ void OpenState::backspace()
 void OpenState::startEditor()
 {
     std::cout << "Using sheet \"" << imgFile << "\"\nUsing output \"" << oFile << "\"\n";
+#if defined(__APPLE__)
+    imgFile = executablePath + imgFile;
+    oFile = executablePath + oFile;
+#endif
     getContext().oFile->insert(0,oFile);
     getContext().textures->load(Textures::TileSheet, imgFile);
     requestStackPop();

@@ -34,7 +34,9 @@ private:
 
     std::string oFile;
     std::string imgFile;
-
+#if defined(__APPLE__)
+    std::string executablePath;
+#endif
     sf::Text info;
     sf::VertexArray line;
 
