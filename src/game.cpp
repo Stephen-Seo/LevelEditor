@@ -1,4 +1,3 @@
-
 #include "game.hpp"
 
 #if defined(_WIN32)
@@ -33,7 +32,7 @@ stateStack(State::Context(window, twindow, textureHolder, fontHolder, oFile))
         std::cout << "checking " << executablePath + "../resources/ClearSans-Regular.ttf\n";
         fontHolder.load(Fonts::ClearSans, executablePath + "../resources/ClearSans-Regular.ttf");
     }
-#elif
+#else
     try{
         fontHolder.load(Fonts::ClearSans, "ClearSans-Regular.ttf");
     } catch(std::runtime_error e)
