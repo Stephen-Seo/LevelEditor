@@ -54,6 +54,7 @@ private:
 
     CoordinateMap<char> map_entities;
     std::map<char, std::list<char> > ewmap;
+    std::set<char> special_entities;
 
     CoordinateMap<char> map_warps;
     CoordinateMap<char> warp_destinations;

@@ -98,6 +98,7 @@ L (in waypoint mode) links a waypoint to another waypoint.
 L (in entity\_waypoint\_connect mode) links an entity to a waypoint.  
 (one must select an entity first, then a waypoint)  
 A/D (in entities mode) changes the symbol that is drawn.  
+M (in entities mode) marks that entity as 'special'.  
 L (in warps mode) picks a warp or sets a location for the selected warp to go to.  
 A/D (in warps mode) changes the symbol that is drawn.  
 L (in key mode) picks a key or sets a door that the key unlocks.  
@@ -108,7 +109,9 @@ In layer0/layer1/layer2 mode, you place the tiles in the layer specified.
 In waypoint mode, you place waypoints.  
 Hover over a waypoint, hit 'L', hover over another waypoint, hit 'L' again to set/unset waypoint adjacency.  
 In obstacles mode, you place obstacles (determines what the player cannot walk through).  
-In entities mode, you can place multiple entities (represented by symbols) into the world.  
+In entities mode, you can place multiple entities (represented by symbols) into the world.
+Entities can be marked with 'M'. Marked entities will appear in the entities file on the line with
+the hash (#).  
 In entity\_waypoint\_connect mode, you connect entities to waypoints. If connecting with an entity
 that has multiple instances of it, the editor may snap the lines to one of the duplicate entities,
 but that type of entity is connected to all the waypoints set to that type.  

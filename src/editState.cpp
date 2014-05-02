@@ -268,6 +268,15 @@ warpSelection(NULL)
             }
         }
 
+        // get special entities
+        for(int i=1; i < line.size(); ++i)
+        {
+            if(line[i] != ' ')
+            {
+                special_entities.insert(line[i]);
+            }
+        }
+
         // get height
         int y;
         for(y=0; std::getline(of,line); ++y);
@@ -657,6 +666,10 @@ void EditState::draw()
                 {
                     entitySymbol.setString(*c);
                     entitySymbol.setPosition((float)(i * tsize), (float)(-j * tsize - tsize));
+                    if(special_entities.find(*c) != special_entities.end())
+                        entitySymbol.setColor(sf::Color::Yellow);
+                    else
+                        entitySymbol.setColor(sf::Color::White);
                     getContext().window->draw(entitySymbol);
                 }
             }
@@ -1357,7 +1370,14 @@ bool EditState::handleEvent(const sf::Event& event)
             of << '\n';
         }
 
-        of << "#\n";
+        of << "#";
+
+        for(auto iter = special_entities.begin(); iter != special_entities.end(); ++iter)
+        {
+            of << ' ' << *iter;
+        }
+
+        of << '\n';
 
         for(int j = my; j > map_entities.getMaxSize().second; --j)
             of << '\n';
@@ -1745,6 +1765,25 @@ bool EditState::handleEvent(const sf::Event& event)
                 }
 
                 keySelection = NULL;
+            }
+        }
+    }
+    else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::M)
+    {
+        sf::Vector2i mpos = sf::Mouse::getPosition(*(getContext().window));
+        sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
+        int x = (int)(gpos.x / tsize);
+        int y = -(int)(gpos.y / tsize);
+
+        if(currentMode == Mode::entities)
+        {
+            char* c = map_entities.get(x,y);
+            if(c != NULL)
+            {
+                if(special_entities.find(*c) == special_entities.end())
+                    special_entities.insert(*c);
+                else
+                    special_entities.erase(*c);
             }
         }
     }
