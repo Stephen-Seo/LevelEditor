@@ -511,7 +511,7 @@ void EditState::draw()
     }
 
     // draw grid
-    for(float y=t + getContext().window->getView().getSize().y; y >= t; y-=(float)tsize)
+    for(float y=t; y <= t + getContext().window->getView().getSize().y; y += (float) tsize)
         for(float x=l; x <= l + getContext().window->getView().getSize().x; x+=(float)tsize)
         {
             grid.setPosition(x,y);
