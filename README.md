@@ -55,8 +55,9 @@ empty space while symbols denote a specific waypoint.
 
 The entity text file has a symbol representing an entity followed by symbols
 that represent connected waypoints. This continues line per line until '#'
-is reached. Following the '# is a literal map of characters that define where
-the entities are. Spaces denote empty space while symbols denote entities.
+is reached. On the '#' line are marked entities. Following the '#' line is a
+literal map of characters that define where the entities are. Spaces denote
+empty space while symbols denote entities.
 
 ## Level/Obstacles format
 
