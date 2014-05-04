@@ -3,7 +3,8 @@
 
 CommandStack::CommandStack() :
 executed(),
-undone()
+undone(),
+undoLimit(COMMAND_UNDO_LIMIT)
 {}
 
 CommandStack::~CommandStack()
@@ -17,6 +18,8 @@ void CommandStack::execute(Command* c)
     c->execute();
     executed.push_front(c);
     clearUndone();
+    if(executed.size() > undoLimit)
+        executed.pop_back();
 }
 
 bool CommandStack::undo()

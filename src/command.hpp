@@ -1,6 +1,8 @@
 #ifndef COMMAND_HPP
 #define COMMAND_HPP
 
+#define COMMAND_UNDO_LIMIT 150
+
 #include <list>
 
 class Command
@@ -22,6 +24,7 @@ public:
 private:
     std::list<Command*> executed;
     std::list<Command*> undone;
+    int undoLimit;
 
     void clearExecuted();
     void clearUndone();
