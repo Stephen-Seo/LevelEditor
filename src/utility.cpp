@@ -25,4 +25,21 @@ std::string getExecutableDirectory()
     
     return std::string(path);
 }
+
+std::string getResourcesDirectory()
+{
+    CFStringRef sRef = CFURLCopyPath(CFBundleCopyExecutableURL(CFBundleGetMainBundle()));
+    char path[PATH_MAX];
+    CFStringGetCString(sRef, path, sizeof(path), kCFStringEncodingASCII);
+    
+    char* loc = strrchr(path, '/');
+    if(loc != NULL)
+        loc[0] = '\0';
+    
+    loc = strrchr(path, '/');
+    if(loc != NULL)
+        loc[1] = '\0';
+    
+    return std::string(path) + "Resources/";
+}
 #endif
