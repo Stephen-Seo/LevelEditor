@@ -101,7 +101,9 @@ A/D (in entities mode) changes the symbol that is drawn.
 L (in warps mode) picks a warp or sets a location for the selected warp to go to.  
 A/D (in warps mode) changes the symbol that is drawn.  
 L (in key mode) picks a key or sets a door that the key unlocks.  
-A/D (in door/key mode) changes the symbol that is drawn.
+A/D (in door/key mode) changes the symbol that is drawn.  
+U is undo.  
+R is redo.
 
 
 In layer0/layer1/layer2 mode, you place the tiles in the layer specified.  
