@@ -153,16 +153,16 @@ T* CoordinateMap<T>::get(int x, int y)
 }
 
 template <class T>
-std::pair<int,int> CoordinateMap<T>::get(T obj)
+Coords CoordinateMap<T>::get(T obj)
 {
     for(auto riter = rows.begin(); riter != rows.end(); ++riter)
     {
         if(riter->second.obj == obj)
         {
-            return std::pair<int,int>(riter->second.x,riter->second.y);
+            return Coords(riter->second.x, riter->second.y);
         }
     }
-    return std::pair<int,int>(-1,-1);
+    return Coords();
 }
 
 template <class T>

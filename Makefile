@@ -5,12 +5,15 @@ LINK = -lsfml-graphics -lsfml-window -lsfml-system
 BINDIR = bin
 SOURCES = \
         src/game.o \
+        src/coordinateMap.o \
         src/stateStack.o \
         src/state.o \
         src/editState.o \
         src/openState.o \
         src/waypoint.o \
-        src/parser.o
+        src/parser.o \
+        src/command.o \
+        src/leCommands.o
 
 all: $(BINDIR) $(BINDIR)/LevelEditor
 

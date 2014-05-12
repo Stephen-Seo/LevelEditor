@@ -14,6 +14,9 @@
 
 #include "coordinateMap.hpp"
 
+#include "command.hpp"
+#include "leCommands.hpp"
+
 #include "parser.hpp"
 
 #define K_SUFFIX "_key.txt"
@@ -42,6 +45,8 @@ private:
     };
 
     Mode currentMode;
+
+    CommandStack commandStack;
 
     std::map<char, std::pair<int,int> > kmap;
     CoordinateMap<char> map_layer0;
@@ -86,10 +91,10 @@ private:
     sf::RectangleShape topIndicator;
 
     sf::VertexArray adjLine;
-    sf::Vector2i linkSelection;
+    Coords linkSelection;
 
     sf::VertexArray ewLine;
-    sf::Vector2i entitySelection;
+    Coords entitySelection;
 
     int eSymbolSelection;
     sf::Text entitySymbol;
