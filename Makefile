@@ -1,15 +1,18 @@
 CXX = g++ -W -Wall -Wextra -pedantic -std=c++0x
-CFLAGS = -c
+CFLAGS = -c -g
 INCLUDE =
 LINK = -lsfml-graphics -lsfml-window -lsfml-system
 BINDIR = bin
 SOURCES = \
         src/game.o \
+        src/coordinateMap.o \
         src/stateStack.o \
         src/state.o \
         src/editState.o \
         src/openState.o \
-        src/waypoint.o
+        src/waypoint.o \
+        src/command.o \
+        src/leCommands.o
 
 all: $(BINDIR) $(BINDIR)/LevelEditor
 

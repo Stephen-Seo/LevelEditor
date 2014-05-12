@@ -27,6 +27,15 @@ public:
     int y;
 };
 
+struct Coords
+{
+    Coords();
+    Coords(int x, int y);
+    int x;
+    int y;
+    bool valid;
+};
+
 template <class T>
 class CoordinateMap
 {
@@ -37,7 +46,7 @@ public:
     bool remove(int x, int y);
     bool remove(T obj);
     T* get(int x, int y);
-    std::pair<int,int> get(T obj);
+    Coords get(T obj);
     std::list<ColumnEntry<T> > getColumn(int x);
     std::list<RowEntry<T> > getRow(int y);
     std::pair<int,int> getMaxSize();

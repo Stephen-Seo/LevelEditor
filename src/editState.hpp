@@ -14,6 +14,9 @@
 
 #include "coordinateMap.hpp"
 
+#include "command.hpp"
+#include "leCommands.hpp"
+
 #define K_SUFFIX "_key.txt"
 #define L0_SUFFIX "_level_layer0.txt"
 #define L1_SUFFIX "_level_layer1.txt"
@@ -40,6 +43,8 @@ private:
     };
 
     Mode currentMode;
+
+    CommandStack commandStack;
 
     std::map<char, std::pair<int,int> > kmap;
     CoordinateMap<char> map_layer0;

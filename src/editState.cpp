@@ -4,6 +4,7 @@
 EditState::EditState(StateStack& stack, Context context)
 : State(stack, context),
 currentMode(Mode::layer0),
+commandStack(),
 kmap(),
 map_layer0(),
 map_layer1(),
@@ -768,11 +769,11 @@ void EditState::draw()
 
             auto coords = map_warps.get(*warpSelection);
 
-            if(coords.first == -1)
+            if(!coords.valid)
                 throw std::runtime_error("Unable to find existing warp coordinates.");
 
-            warpLine[0].position.x = (float) (coords.first * tsize) + ((float)tsize)/2.0f;
-            warpLine[0].position.y = (float) (-coords.second * tsize) - ((float)tsize)/2.0f;
+            warpLine[0].position.x = (float) (coords.x * tsize) + ((float)tsize)/2.0f;
+            warpLine[0].position.y = (float) (-coords.y * tsize) - ((float)tsize)/2.0f;
             warpLine[1].position = gpos;
 
             getContext().window->draw(warpLine);
@@ -787,8 +788,8 @@ void EditState::draw()
                 {
                     auto coords = map_warps.get(*c);
 
-                    warpLine[0].position.x = (float) (coords.first * tsize) + ((float)tsize)/2.0f;
-                    warpLine[0].position.y = (float) (-coords.second * tsize) - ((float)tsize)/2.0f;
+                    warpLine[0].position.x = (float) (coords.x * tsize) + ((float)tsize)/2.0f;
+                    warpLine[0].position.y = (float) (-coords.y * tsize) - ((float)tsize)/2.0f;
                     warpLine[1].position.x = (float) (i * tsize) + ((float)tsize)/2.0f;
                     warpLine[1].position.y = (float) (-j * tsize) - ((float)tsize)/2.0f;
 
@@ -838,10 +839,10 @@ void EditState::draw()
             auto kcoords = map_keys.get(iter->first);
             auto dcoords = map_doors.get(iter->second);
 
-            dkLine[0].position.x = (float) (kcoords.first * tsize) + ((float)tsize)/2.0f;
-            dkLine[0].position.y = (float) (-kcoords.second * tsize) - ((float)tsize)/2.0f;
-            dkLine[1].position.x = (float) (dcoords.first * tsize) + ((float)tsize)/2.0f;
-            dkLine[1].position.y = (float) (-dcoords.second * tsize) - ((float)tsize)/2.0f;
+            dkLine[0].position.x = (float) (kcoords.x * tsize) + ((float)tsize)/2.0f;
+            dkLine[0].position.y = (float) (-kcoords.y * tsize) - ((float)tsize)/2.0f;
+            dkLine[1].position.x = (float) (dcoords.x * tsize) + ((float)tsize)/2.0f;
+            dkLine[1].position.y = (float) (-dcoords.y * tsize) - ((float)tsize)/2.0f;
 
             getContext().window->draw(dkLine);
         }
@@ -853,8 +854,8 @@ void EditState::draw()
 
             auto kcoords = map_keys.get(*keySelection);
 
-            dkLine[0].position.x = (float) (kcoords.first * tsize) + ((float)tsize)/2.0f;
-            dkLine[0].position.y = (float) (-kcoords.second * tsize) - ((float)tsize)/2.0f;
+            dkLine[0].position.x = (float) (kcoords.x * tsize) + ((float)tsize)/2.0f;
+            dkLine[0].position.y = (float) (-kcoords.y * tsize) - ((float)tsize)/2.0f;
             dkLine[1].position = gpos;
 
             getContext().window->draw(dkLine);
@@ -949,79 +950,41 @@ bool EditState::update()
         int x = (int)(gpos.x / tsize);
         int y = -(int)(gpos.y / tsize);
 
-        if(currentMode == Mode::layer0)
-            map_layer0.remove(x,y);
-        else if(currentMode == Mode::layer1)
-            map_layer1.remove(x,y);
-        else if(currentMode == Mode::layer2)
-            map_layer2.remove(x,y);
-        else if(currentMode == Mode::waypoint)
+        if(currentMode == Mode::layer0 && map_layer0.get(x,y) != NULL)
         {
-            char* waypointChar = map_waypoint.get(x,y);
-            if(waypointChar != NULL)
-            {
-                wm.removeWaypoint(*waypointChar);
-                map_waypoint.remove(x,y);
-                for(auto iter = ewmap.begin(); iter != ewmap.end(); ++iter)
-                {
-                    for(auto liter = iter->second.begin(); liter != iter->second.end(); ++liter)
-                    {
-                        if(*liter == *waypointChar)
-                        {
-                            iter->second.erase(liter);
-                            break;
-                        }
-                    }
-                }
-            }
+            commandStack.execute(new TileDeleteCommand(x, y, &map_layer0));
         }
-        else if(currentMode == Mode::obstacles)
-            map_obstacles.remove(x,y);
-        else if(currentMode == Mode::entities)
+        else if(currentMode == Mode::layer1 && map_layer1.get(x,y) != NULL)
         {
-            char* entity = map_entities.get(x,y);
-            if(entity != NULL)
-            {
-                ewmap.erase(*entity);
-                map_entities.remove(x,y);
-            }
+            commandStack.execute(new TileDeleteCommand(x, y, &map_layer1));
         }
-        else if(currentMode == Mode::warps)
+        else if(currentMode == Mode::layer2 && map_layer2.get(x,y) != NULL)
         {
-            char* w = map_warps.get(x,y);
-            if(w != NULL)
-            {
-                warp_destinations.remove(*w);
-                map_warps.remove(x,y);
-            }
+            commandStack.execute(new TileDeleteCommand(x, y, &map_layer2));
         }
-        else if(currentMode == Mode::door)
+        else if(currentMode == Mode::waypoint && map_waypoint.get(x,y) != NULL)
         {
-            char* d = map_doors.get(x,y);
-            if(d != NULL)
-            {
-                auto iter = dtok.find(*d);
-                if(iter != dtok.end())
-                {
-                    dtok.erase(*d);
-                    ktod.erase(iter->second);
-                }
-                map_doors.remove(x,y);
-            }
+            commandStack.execute(new WaypointDeleteCommand(x, y, &wm, &map_waypoint, &ewmap));
         }
-        else if(currentMode == Mode::key)
+        else if(currentMode == Mode::obstacles && map_obstacles.get(x,y) != NULL)
         {
-            char* k = map_keys.get(x,y);
-            if(k != NULL)
-            {
-                auto iter = ktod.find(*k);
-                if(iter != ktod.end())
-                {
-                    ktod.erase(*k);
-                    dtok.erase(iter->second);
-                }
-                map_keys.remove(x,y);
-            }
+            commandStack.execute(new TileDeleteCommand(x, y, &map_obstacles));
+        }
+        else if(currentMode == Mode::entities && map_entities.get(x,y) != NULL)
+        {
+            commandStack.execute(new EntityDeleteCommand(x, y, &map_entities, &ewmap));
+        }
+        else if(currentMode == Mode::warps && map_warps.get(x,y) != NULL)
+        {
+            commandStack.execute(new WarpDeleteCommand(x, y, &map_warps, &warp_destinations));
+        }
+        else if(currentMode == Mode::door && map_doors.get(x,y) != NULL)
+        {
+            commandStack.execute(new KDDeleteCommand(x, y, &map_doors, &dtok, &ktod, false));
+        }
+        else if(currentMode == Mode::key && map_keys.get(x,y) != NULL)
+        {
+            commandStack.execute(new KDDeleteCommand(x, y, &map_keys, &dtok, &ktod, true));
         }
     }
     else if(drawing)
@@ -1042,92 +1005,53 @@ bool EditState::update()
         int y = -(int)(gpos.y / tsize);
         if(y >= 0 && x >= 0)
         {
-            if(currentMode == Mode::layer0 && selChar != ' ')
+            if(currentMode == Mode::layer0 && selChar != ' ' && (map_layer0.get(x,y) == NULL || selChar != *(map_layer0.get(x,y))))
             {
-                if(map_layer0.get(x,y) != NULL)
-                    map_layer0.remove(x,y);
-                map_layer0.add(selChar, x, y);
+                commandStack.execute(new TileCreateCommand(selChar, x, y, &map_layer0));
             }
-            else if(currentMode == Mode::layer1 && selChar != ' ')
+            else if(currentMode == Mode::layer1 && selChar != ' ' && (map_layer1.get(x,y) == NULL || selChar != *(map_layer1.get(x,y))))
             {
-                if(map_layer1.get(x,y) != NULL)
-                    map_layer1.remove(x,y);
-                map_layer1.add(selChar, x, y);
+                commandStack.execute(new TileCreateCommand(selChar, x, y, &map_layer1));
             }
-            else if(currentMode == Mode::layer2 && selChar != ' ')
+            else if(currentMode == Mode::layer2 && selChar != ' ' && (map_layer2.get(x,y) == NULL || selChar != *(map_layer2.get(x,y))))
             {
-                if(map_layer2.get(x,y) != NULL)
-                    map_layer2.remove(x,y);
-                map_layer2.add(selChar, x, y);
+                commandStack.execute(new TileCreateCommand(selChar, x, y, &map_layer2));
             }
-            else if(currentMode == Mode::waypoint)
+            else if(currentMode == Mode::waypoint && map_waypoint.get(x,y) == NULL)
             {
-                if(map_waypoint.get(x,y) == NULL)
+                int i;
+                for(i=0; i < validChars.size(); ++i)
                 {
-                    int i;
-                    for(i=0; i < validChars.size(); ++i)
+                    if(wm.getCurrentChars().find(validChars[i]) == std::string::npos)
                     {
-                        if(wm.getCurrentChars().find(validChars[i]) == std::string::npos)
-                        {
-                            selChar = validChars[i];
-                            break;
-                        }
-                    }
-                    if(i != validChars.size())
-                    {
-                        map_waypoint.add(selChar, x, y);
-                        wm.addWaypoint(selChar);
+                        selChar = validChars[i];
+                        break;
                     }
                 }
-            }
-            else if(currentMode == Mode::obstacles)
-            {
-                map_obstacles.add('o', x, y);
-            }
-            else if(currentMode == Mode::entities)
-            {
-                if(map_entities.get(x,y) != NULL)
-                    map_entities.remove(x,y);
-                map_entities.add(validChars[eSymbolSelection], x, y);
-            }
-            else if(currentMode == Mode::warps)
-            {
-                if(map_warps.get(x,y) != NULL)
+                if(i != validChars.size())
                 {
-                    map_warps.remove(x,y);
-                    warp_destinations.remove(x,y);
+                    commandStack.execute(new WaypointCreateCommand(selChar, x, y, &wm, &map_waypoint));
                 }
-                map_warps.add(validChars[eSymbolSelection], x, y);
             }
-            else if(currentMode == Mode::door)
+            else if(currentMode == Mode::obstacles && map_obstacles.get(x,y) == NULL)
             {
-                char* d = map_doors.get(x,y);
-                if(d != NULL)
-                {
-                    auto iter = dtok.find(*d);
-                    if(iter != dtok.end())
-                    {
-                        dtok.erase(*d);
-                        ktod.erase(iter->second);
-                    }
-                    map_doors.remove(x,y);
-                }
-                map_doors.add(validChars[eSymbolSelection], x, y);
+                commandStack.execute(new TileCreateCommand('o', x, y, &map_obstacles));
             }
-            else if(currentMode == Mode::key)
+            else if(currentMode == Mode::entities && (map_entities.get(x,y) == NULL || validChars[eSymbolSelection] != *(map_entities.get(x,y))))
             {
-                char* k = map_keys.get(x,y);
-                if(k != NULL)
-                {
-                    auto iter = ktod.find(*k);
-                    if(iter != ktod.end())
-                    {
-                        ktod.erase(*k);
-                        dtok.erase(iter->second);
-                    }
-                    map_keys.remove(x,y);
-                }
-                map_keys.add(validChars[eSymbolSelection], x, y);
+                commandStack.execute(new EntityCreateCommand(validChars[eSymbolSelection], x, y, &map_entities, &ewmap));
+            }
+            else if(currentMode == Mode::warps && (map_warps.get(x,y) == NULL || validChars[eSymbolSelection] != *(map_warps.get(x,y))))
+            {
+                commandStack.execute(new WarpCreateCommand(validChars[eSymbolSelection], x, y, &map_warps, &warp_destinations));
+            }
+            else if(currentMode == Mode::door && (map_doors.get(x,y) == NULL || validChars[eSymbolSelection] != *(map_doors.get(x,y))))
+            {
+                commandStack.execute(new KDCreateCommand(validChars[eSymbolSelection], x, y, &map_doors, &dtok, &ktod, false));
+            }
+            else if(currentMode == Mode::key && (map_keys.get(x,y) == NULL || validChars[eSymbolSelection] != *(map_keys.get(x,y))))
+            {
+                commandStack.execute(new KDCreateCommand(validChars[eSymbolSelection], x, y, &map_keys, &dtok, &ktod, true));
             }
         }
     }
@@ -1667,9 +1591,9 @@ bool EditState::handleEvent(const sf::Event& event)
                     if((*selChar) != (*prevChar))
                     {
                         if(!wm.isAdjacent(*prevChar, *selChar))
-                            wm.makeAdjacent(*prevChar, *selChar);
+                            commandStack.execute(new WaypointLinkCommand(*selChar, *prevChar, &wm, false));
                         else
-                            wm.unmakeAdjacent(*prevChar, *selChar);
+                            commandStack.execute(new WaypointLinkCommand(*selChar, *prevChar, &wm, true));
                     }
                     linkSelection.x = -1;
                 }
@@ -1696,20 +1620,7 @@ bool EditState::handleEvent(const sf::Event& event)
                 else
                 {
                     char* prevChar = map_entities.get(entitySelection.x, entitySelection.y);
-                    bool contains = false;
-                    for(auto liter = ewmap[*prevChar].begin(); liter != ewmap[*prevChar].end(); ++liter)
-                    {
-                        if(*liter == *selChar)
-                        {
-                            contains = true;
-                            ewmap[*prevChar].erase(liter);
-                            break;
-                        }
-                    }
-                    if(!contains)
-                    {
-                        ewmap[*prevChar].push_back(*selChar);
-                    }
+                    commandStack.execute(new EWLinkCommand(*prevChar, *selChar, &ewmap));
 
                     entitySelection.x = -1;
                 }
@@ -1719,9 +1630,7 @@ bool EditState::handleEvent(const sf::Event& event)
         {
             if(warpSelection != NULL)
             {
-                if(warp_destinations.get(*warpSelection).first != -1)
-                    warp_destinations.remove(*warpSelection);
-                warp_destinations.add(*warpSelection, x, y);
+                commandStack.execute(new WarpDestCommand(*warpSelection, x, y, &warp_destinations));
                 warpSelection = NULL;
             }
             else
@@ -1743,25 +1652,7 @@ bool EditState::handleEvent(const sf::Event& event)
                 char* door = map_doors.get(x,y);
                 if(door != NULL)
                 {
-                    {
-                        auto iter = dtok.find(*door);
-                        if(iter != dtok.end())
-                        {
-                            ktod.erase(iter->second);
-                            dtok.erase(iter);
-                        }
-                    }
-
-                    {
-                        auto iter = ktod.find(*keySelection);
-                        if(iter != ktod.end())
-                        {
-                            dtok.erase(iter->second);
-                            ktod.erase(iter);
-                        }
-                    }
-                    ktod.insert(std::pair<char,char>(*keySelection, *door));
-                    dtok.insert(std::pair<char,char>(*door, *keySelection));
+                    commandStack.execute(new KDLinkCommand(*keySelection, *door, &dtok, &ktod));
                 }
 
                 keySelection = NULL;
@@ -1780,10 +1671,7 @@ bool EditState::handleEvent(const sf::Event& event)
             char* c = map_entities.get(x,y);
             if(c != NULL)
             {
-                if(special_entities.find(*c) == special_entities.end())
-                    special_entities.insert(*c);
-                else
-                    special_entities.erase(*c);
+                commandStack.execute(new EntityMarkCommand(*c, &special_entities));
             }
         }
     }
@@ -1816,6 +1704,14 @@ bool EditState::handleEvent(const sf::Event& event)
         cView.setCenter(getContext().window->getView().getCenter());
         cView.zoom(2.0f);
         getContext().window->setView(cView);
+    }
+    else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::U)
+    {
+        commandStack.undo();
+    }
+    else if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::R)
+    {
+        commandStack.redo();
     }
 
     return true;
