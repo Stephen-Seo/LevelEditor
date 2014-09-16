@@ -1,6 +1,8 @@
 Note: the program is licensed under the MIT license. It can
-be found in the src folder. the font used by this program is licensed
-under the Apache License Version 2.0. That can be found in the resources
+be found in the src folder.  
+The font used by this program is found [here](https://01.org/clear-sans)
+and is licensed under the Apache License Version 2.0.
+That can be found in the resources
 folder.
 
 # Compiling
