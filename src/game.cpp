@@ -2,7 +2,7 @@
 #include "game.hpp"
 
 Game::Game(std::string oFile, std::string imgFile, std::string keyFile)
-: window(sf::VideoMode(800,600), "SFML App"),
+: window(sf::VideoMode(sf::Vector2u{800,600}), "SFML App"),
 twindow(),
 textureHolder(),
 fontHolder(),
@@ -30,12 +30,14 @@ void Game::run()
 
 void Game::processEvents()
 {
-    sf::Event event;
-    while (window.pollEvent(event))
+    while (const std::optional event = window.pollEvent())
     {
-        stateStack.handleEvent(event);
-        if(event.type == sf::Event::Closed)
-            window.close();
+        if (event) {
+            stateStack.handleEvent(event.value());
+            if(event->is<sf::Event::Closed>()) {
+                window.close();
+            }
+        }
     }
 }
 

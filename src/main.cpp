@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
         Game game(oFile, imgFile, keyFile);
         game.run();
     }
-    catch (std::runtime_error e)
+    catch (const std::runtime_error &e)
     {
         std::cout << e.what() << "\n";
     }

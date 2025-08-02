@@ -3,13 +3,14 @@
 #define STATE_STACK_HPP
 
 #include <cassert>
+#include <functional>
 
 #include <SFML/System.hpp>
 
 #include "state.hpp"
 #include "stateIdentifiers.hpp"
 
-class StateStack : private sf::NonCopyable
+class StateStack
 {
 public:
     enum Action
