@@ -6,6 +6,7 @@ EditState::EditState(StateStack& stack, Context context)
 kmap(),
 map(),
 sheet(context.textures->get(Textures::TileSheet)),
+history_idx(0),
 selection(0,0),
 drawing(false),
 deleting(false)
@@ -232,6 +233,14 @@ bool EditState::update()
             {
                 map.at(ys).push_back(' ');
             }
+            if (map.at(ys).at(xs) != selChar) {
+                if (history_idx < history.size()) {
+                    history.resize(history_idx);
+                }
+                history.push_back(Action{xs, ys, map.at(ys).at(xs), selChar});
+                history_idx = history.size();
+                // history.back().print();
+            }
             map.at(ys).at(xs) = selChar;
         }
     }
@@ -254,6 +263,14 @@ bool EditState::update()
             while(map.at(ys).size() <= xs)
             {
                 map.at(ys).push_back(' ');
+            }
+            if (map.at(ys).at(xs) != selChar) {
+                if (history_idx < history.size()) {
+                    history.resize(history_idx);
+                }
+                history.push_back(Action{xs, ys, map.at(ys).at(xs), selChar});
+                history_idx = history.size();
+                // history.back().print();
             }
             map.at(ys).at(xs) = selChar;
         }
@@ -375,6 +392,47 @@ bool EditState::handleEvent(const sf::Event& event)
         getContext().window->setView(cView);
     }
 
+    else if (event.is<sf::Event::KeyPressed>()
+            && event.getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::U) {
+        if (history_idx != 0) {
+            --history_idx;
+            const Action &action = history.at(history_idx);
+            map.at(action.y).at(action.x) = action.old_tile;
+            // std::cout << "Undo from \""
+            //     << action.new_tile
+            //     << "\" to \""
+            //     << action.old_tile
+            //     << "\""
+            //     << std::endl;
+        }
+    } else if (event.is<sf::Event::KeyPressed>()
+            && event.getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::R) {
+        if (history_idx < history.size()) {
+            const Action &action = history.at(history_idx++);
+            map.at(action.y).at(action.x) = action.new_tile;
+            // std::cout
+            //     << "Redo from \""
+            //     << action.old_tile
+            //     << "\" to \""
+            //     << action.new_tile
+            //     << "\""
+            //     << std::endl;
+        }
+    }
+
     return true;
 }
 
+void EditState::Action::print() const {
+    std::cout
+        << "Action: x,y: "
+        << x
+        << ", "
+        << y
+        << "old: \""
+        << old_tile
+        << "\" new: \""
+        << new_tile
+        << "\""
+        << std::endl;
+}

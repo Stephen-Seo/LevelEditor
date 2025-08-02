@@ -1,5 +1,6 @@
 
 #include <fstream>
+#include <deque>
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
@@ -17,6 +18,17 @@ public:
     virtual bool update();
     virtual bool handleEvent(const sf::Event& event);
 private:
+    struct Action {
+        size_t x;
+        size_t y;
+        char old_tile;
+        char new_tile;
+
+        void print() const;
+    };
+
+    std::deque<Action> history;
+
     std::vector<char> kmap;
     std::vector<std::vector<char> > map;
 
@@ -25,6 +37,7 @@ private:
     unsigned int tsize;
     sf::Vector2u isize;
     unsigned int width;
+    size_t history_idx;
 
     sf::Vector2u selection;
 
