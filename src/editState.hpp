@@ -24,7 +24,7 @@ private:
 
     unsigned int tsize;
     sf::Vector2u isize;
-    int width;
+    unsigned int width;
 
     sf::Vector2u selection;
 

@@ -10,8 +10,6 @@ selection(0,0),
 drawing(false),
 deleting(false)
 {
-    //sheet.setTexture(getContext().textures->get(Textures::TileSheet));
-
     isize = getContext().textures->get(Textures::TileSheet).getSize();
 
     std::fstream ks;
@@ -22,6 +20,7 @@ deleting(false)
         throw std::runtime_error("Unable to open Keyfile.");
     }
 
+    // Parse tsize from ks.
     ks >> tsize;
     if(ks.fail())
     {
@@ -29,13 +28,14 @@ deleting(false)
         throw std::runtime_error("Unable to read Keyfile.");
     }
 
-    char s;
-
-    while((s = ks.get()) != std::char_traits<char>::eof())
     {
+        char input_char;
+        while((input_char = static_cast<char>(ks.get())) != std::char_traits<char>::eof())
+        {
         
-        if(s != '\n')
-            kmap.push_back(s);
+            if(input_char != '\n')
+                kmap.push_back(input_char);
+        }
     }
 
     std::cout << kmap.size() << " is size of map.\n";
@@ -67,7 +67,7 @@ deleting(false)
 
     if(of.is_open())
     {
-        for(int i=0; std::getline(of, line); ++i)
+        for(unsigned int i=0; std::getline(of, line); ++i)
         {
             while(map.size() <= i)
                 map.push_back(std::vector<char> ());
@@ -80,10 +80,11 @@ deleting(false)
     of.open(getContext().oFile);
     if(of.is_open())
     {
-        for(int i=0; std::getline(of, line); ++i)
+        for(unsigned int i=0; std::getline(of, line); ++i)
         {
-            for(int j=0; j < line.size(); ++j)
+            for(unsigned int j=0; j < line.size(); ++j) {
                 map[map.size() - i - 1].push_back(line[j]);
+            }
         }
         of.close();
     }
@@ -94,7 +95,7 @@ deleting(false)
     sHighlight.setFillColor(sf::Color(255,255,255,50));
     sHighlight.setOutlineColor(sf::Color::Red);
     sHighlight.setOutlineThickness(1.f);
-    sHighlight.setRadius(tsize/2.f);
+    sHighlight.setRadius(static_cast<float>(tsize)/2.0F);
 
     saveIndicator.setSize(sf::Vector2f(800.f,600.f));
     saveIndicator.setFillColor(sf::Color(255,255,255,0));
@@ -117,7 +118,7 @@ deleting(false)
     getContext().window->setView(cView);
 
     printf("\nKMap contents:\n");
-    for(int i = 0; i < kmap.size(); ++i)
+    for(unsigned int i = 0; i < kmap.size(); ++i)
         printf("%c",kmap[i]);
     printf("\n");
 
@@ -139,22 +140,28 @@ void EditState::draw()
     getContext().window->draw(topIndicator);
     
 
-    int left,top;
-    for(int y=0; y < map.size(); ++y)
-        for(int x=0; x < map[y].size(); ++x)
-            for(int u=0; u < kmap.size(); ++u)
+    unsigned int left,top;
+    for(unsigned int y=0; y < map.size(); ++y)
+        for(unsigned int x=0; x < map[y].size(); ++x)
+            for(unsigned int u=0; u < kmap.size(); ++u)
                 if(map[y][x] != ' ' && kmap[u] == map[y][x])
                 {
                     left = (u % width) * tsize;
                     top = (u / width) * tsize;
-                    sheet.setTextureRect(sf::IntRect({left,top},{tsize,tsize}));
-                    sheet.setPosition({x*tsize, -y*(int)tsize - (int)tsize});
+                    sheet.setTextureRect(sf::IntRect(
+                        {static_cast<int>(left),static_cast<int>(top)},
+                        {static_cast<int>(tsize),static_cast<int>(tsize)}));
+                    sheet.setPosition(
+                        {static_cast<float>(x*tsize),
+                         static_cast<float>(
+                            -static_cast<int>(y*tsize)
+                            - static_cast<int>(tsize))});
                     getContext().window->draw(sheet);
                     break;
                 }
 
-    for(float y=t + 600.f; y >= t; y-=(float)tsize)
-        for(float x=l; x <= l + 800.f; x+=(float)tsize)
+    for(float y=t + 600.f; y >= t; y-=static_cast<float>(tsize))
+        for(float x=l; x <= l + 800.f; x+=static_cast<float>(tsize))
         {
             grid.setPosition({x,y});
             getContext().window->draw(grid);
@@ -178,11 +185,15 @@ void EditState::draw()
 
     // Begin drawing for twindow
     getContext().twindow->clear(sf::Color(127,127,127));
-    sheet.setTextureRect(sf::IntRect({0,0},{isize.x,isize.y}));
+    sheet.setTextureRect(sf::IntRect(
+        {0,0},
+        {static_cast<int>(isize.x),static_cast<int>(isize.y)}));
     sheet.setPosition({0.f,0.f});
     getContext().twindow->draw(sheet);
 
-    sHighlight.setPosition({(float)(selection.x * tsize),(float)(selection.y * tsize)});
+    sHighlight.setPosition({
+        static_cast<float>((selection.x * tsize)),
+        static_cast<float>((selection.y * tsize))});
     getContext().twindow->draw(sHighlight);
 
     getContext().twindow->display();
@@ -212,15 +223,16 @@ bool EditState::update()
         char selChar = ' ';
         sf::Vector2i mpos = sf::Mouse::getPosition(*(getContext().window));
         sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
-        int x = (int)(gpos.x / tsize);
-        int y = -(int)(gpos.y / tsize);
-        if(y >= 0 && y < map.size() && x >= 0 && x < map[y].size())
+        int x = static_cast<int>((gpos.x / static_cast<float>(tsize)));
+        int y = -static_cast<int>((gpos.y / static_cast<float>(tsize)));
+        if(size_t xs = static_cast<size_t>(x), ys = static_cast<size_t>(y);
+            y >= 0 && ys < map.size() && x >= 0 && xs < map[ys].size())
         {
-            while(map[y].size() <= x)
+            while(map[ys].size() <= xs)
             {
-                map[y].push_back(' ');
+                map[ys].push_back(' ');
             }
-            map[y][x] = selChar;
+            map[ys][xs] = selChar;
         }
     }
     else if(drawing)
@@ -228,20 +240,22 @@ bool EditState::update()
         char selChar = kmap[selection.y * width + selection.x];
         sf::Vector2i mpos = sf::Mouse::getPosition(*(getContext().window));
         sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
-        int x = (int)(gpos.x / tsize);
-        int y = -(int)(gpos.y / tsize);
+        int x = static_cast<int>((gpos.x / static_cast<float>(tsize)));
+        int y = -static_cast<int>((gpos.y / static_cast<float>(tsize)));
         //printf("%d,%d\n",x,y);
         if(y >= 0 && x >= 0)
         {
-            while(map.size() <= y)
+            size_t xs = static_cast<size_t>(x);
+            size_t ys = static_cast<size_t>(y);
+            while(map.size() <= ys)
             {
                 map.push_back(std::vector<char>());
             }
-            while(map[y].size() <= x)
+            while(map[ys].size() <= xs)
             {
-                map[y].push_back(' ');
+                map[ys].push_back(' ');
             }
-            map[y][x] = selChar;
+            map[ys][xs] = selChar;
         }
     }
 
@@ -253,7 +267,7 @@ bool EditState::update()
             a-=5;
         else
             a=0;
-        saveIndicator.setFillColor(sf::Color(255,255,255,a));
+        saveIndicator.setFillColor(sf::Color(255,255,255,static_cast<uint8_t>(a)));
     }
 
     // Begin twindow event handling
@@ -262,8 +276,10 @@ bool EditState::update()
         if(event->is<sf::Event::MouseButtonPressed>())
         {
             sf::Vector2i pos = event->getIf<sf::Event::MouseButtonPressed>()->position;
-            selection.x = (unsigned int) (pos.x / (float)tsize);
-            selection.y = (unsigned int) (pos.y / (float)tsize);
+            selection.x = static_cast<unsigned int>(
+                (static_cast<float>(pos.x) / static_cast<float>(tsize)));
+            selection.y = static_cast<unsigned int>(
+                (static_cast<float>(pos.y) / static_cast<float>(tsize)));
         }
     }
     return true;
@@ -271,15 +287,20 @@ bool EditState::update()
 
 bool EditState::handleEvent(const sf::Event& event)
 {
-    if(event.is<sf::Event::MouseButtonPressed>() && event.getIf<sf::Event::MouseButtonPressed>()->button == sf::Mouse::Button::Left)
+    if(event.is<sf::Event::MouseButtonPressed>()
+            && event.getIf<sf::Event::MouseButtonPressed>()->button == sf::Mouse::Button::Left) {
         drawing = true;
-    else if(event.is<sf::Event::MouseButtonReleased>() && event.getIf<sf::Event::MouseButtonReleased>()->button == sf::Mouse::Button::Left)
+    } else if(event.is<sf::Event::MouseButtonReleased>()
+            && event.getIf<sf::Event::MouseButtonReleased>()->button == sf::Mouse::Button::Left) {
         drawing = false;
-    else if(event.is<sf::Event::MouseButtonPressed>() && event.getIf<sf::Event::MouseButtonPressed>()->button == sf::Mouse::Button::Right)
+    } else if(event.is<sf::Event::MouseButtonPressed>()
+            && event.getIf<sf::Event::MouseButtonPressed>()->button == sf::Mouse::Button::Right) {
         deleting = true;
-    else if(event.is<sf::Event::MouseButtonReleased>() && event.getIf<sf::Event::MouseButtonReleased>()->button == sf::Mouse::Button::Right)
+    } else if(event.is<sf::Event::MouseButtonReleased>()
+            && event.getIf<sf::Event::MouseButtonReleased>()->button == sf::Mouse::Button::Right) {
         deleting = false;
-    else if(event.is<sf::Event::KeyPressed>() && event.getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Enter)
+    } else if(event.is<sf::Event::KeyPressed>()
+            && event.getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Enter)
     {
         std::fstream of;
         of.open(getContext().oFile, std::ios::trunc | std::ios::out);
@@ -317,36 +338,40 @@ bool EditState::handleEvent(const sf::Event& event)
         saveIndicator.setFillColor(sf::Color::White);
     }
 
-    else if(event.is<sf::Event::KeyPressed>() && event.getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Right)
+    else if(event.is<sf::Event::KeyPressed>()
+        && event.getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Right)
     {
         sf::View cView;
         cView.setSize(getContext().window->getView().getSize());
         cView.setCenter(getContext().window->getView().getCenter());
-        cView.move({(float)tsize,0.0F});
+        cView.move({static_cast<float>(tsize),0.0F});
         getContext().window->setView(cView);
     }
-    else if(event.is<sf::Event::KeyPressed>() && event.getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Left)
+    else if(event.is<sf::Event::KeyPressed>()
+        && event.getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Left)
     {
         sf::View cView;
         cView.setSize(getContext().window->getView().getSize());
         cView.setCenter(getContext().window->getView().getCenter());
-        cView.move({-(float)tsize,0.0F});
+        cView.move({-static_cast<float>(tsize),0.0F});
         getContext().window->setView(cView);
     }
-    else if(event.is<sf::Event::KeyPressed>() && event.getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Up)
+    else if(event.is<sf::Event::KeyPressed>()
+        && event.getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Up)
     {
         sf::View cView;
         cView.setSize(getContext().window->getView().getSize());
         cView.setCenter(getContext().window->getView().getCenter());
-        cView.move({0.0F,-(float)tsize});
+        cView.move({0.0F,-static_cast<float>(tsize)});
         getContext().window->setView(cView);
     }
-    else if(event.is<sf::Event::KeyPressed>() && event.getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Down)
+    else if(event.is<sf::Event::KeyPressed>()
+        && event.getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Down)
     {
         sf::View cView;
         cView.setSize(getContext().window->getView().getSize());
         cView.setCenter(getContext().window->getView().getCenter());
-        cView.move({0.0F,(float)tsize});
+        cView.move({0.0F,static_cast<float>(tsize)});
         getContext().window->setView(cView);
     }
 

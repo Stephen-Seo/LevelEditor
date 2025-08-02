@@ -5,6 +5,9 @@ void ResourceHolder<Resource, Identifier>::load(Identifier id, const std::string
     std::unique_ptr<Resource> resource(new Resource());
     if (!resource->loadFromFile(filename))
         throw std::runtime_error("ResourceHolder::load - Failed to load " + filename);
+    #ifdef NDEBUG
+    __attribute__((unused))
+    #endif
     auto inserted = resourceMap.insert(std::make_pair(id, std::move(resource)));
     assert(inserted.second);
 }
@@ -16,6 +19,9 @@ void ResourceHolder<Resource, Identifier>::load(Identifier id, const std::string
     std::unique_ptr<Resource> resource(new Resource());
     if (!resource->loadFromFile(filename, secondParam))
         throw std::runtime_error("ResourceHolder::load - Failed to load " + filename);
+    #ifdef NDEBUG
+    __attribute__((unused))
+    #endif
     auto inserted = resourceMap.insert(std::make_pair(id, std::move(resource)));
     assert(inserted.second);
 }
