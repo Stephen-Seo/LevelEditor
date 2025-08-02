@@ -203,15 +203,15 @@ bool EditState::update()
 {
 
     // Begin main update
-    int l = (int)( getContext().window->getView().getCenter().x -
+    int l = static_cast<int>( getContext().window->getView().getCenter().x -
                    getContext().window->getView().getSize().x / 2.f);
-    int t = (int)( getContext().window->getView().getCenter().y -
+    int t = static_cast<int>( getContext().window->getView().getCenter().y -
                    getContext().window->getView().getSize().y / 2.f);
 
     t = -t - 600;
 
-    l /= tsize;
-    t /= tsize;
+    l /= static_cast<int>(tsize);
+    t /= static_cast<int>(tsize);
 
     std::stringstream ss;
     ss << "LevelEditor [" << l << "," << t << "]";
