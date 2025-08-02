@@ -83,7 +83,7 @@ deleting(false)
         for(unsigned int i=0; std::getline(of, line); ++i)
         {
             for(unsigned int j=0; j < line.size(); ++j) {
-                map[map.size() - i - 1].push_back(line[j]);
+                map.at(map.size() - i - 1).push_back(line.at(j));
             }
         }
         of.close();
@@ -119,7 +119,7 @@ deleting(false)
 
     printf("\nKMap contents:\n");
     for(unsigned int i = 0; i < kmap.size(); ++i)
-        printf("%c",kmap[i]);
+        printf("%c",kmap.at(i));
     printf("\n");
 
 }
@@ -142,9 +142,9 @@ void EditState::draw()
 
     unsigned int left,top;
     for(unsigned int y=0; y < map.size(); ++y)
-        for(unsigned int x=0; x < map[y].size(); ++x)
+        for(unsigned int x=0; x < map.at(y).size(); ++x)
             for(unsigned int u=0; u < kmap.size(); ++u)
-                if(map[y][x] != ' ' && kmap[u] == map[y][x])
+                if(map.at(y).at(x) != ' ' && kmap.at(u) == map.at(y).at(x))
                 {
                     left = (u % width) * tsize;
                     top = (u / width) * tsize;
@@ -173,9 +173,9 @@ void EditState::draw()
     for(int y=0; y < map.size(); ++y)
     {
         printf("%d]",y);
-        for(int x=0; x < map[y].size(); ++x)
+        for(int x=0; x < map.at(y).size(); ++x)
         {
-            printf("%c",map[y][x]);
+            printf("%c",map.at(y).at(x));
         }
         printf("\n");
     }
@@ -226,18 +226,18 @@ bool EditState::update()
         int x = static_cast<int>((gpos.x / static_cast<float>(tsize)));
         int y = -static_cast<int>((gpos.y / static_cast<float>(tsize)));
         if(size_t xs = static_cast<size_t>(x), ys = static_cast<size_t>(y);
-            y >= 0 && ys < map.size() && x >= 0 && xs < map[ys].size())
+            y >= 0 && ys < map.size() && x >= 0 && xs < map.at(ys).size())
         {
-            while(map[ys].size() <= xs)
+            while(map.at(ys).size() <= xs)
             {
-                map[ys].push_back(' ');
+                map.at(ys).push_back(' ');
             }
-            map[ys][xs] = selChar;
+            map.at(ys).at(xs) = selChar;
         }
     }
     else if(drawing)
     {
-        char selChar = kmap[selection.y * width + selection.x];
+        char selChar = kmap.at(selection.y * width + selection.x);
         sf::Vector2i mpos = sf::Mouse::getPosition(*(getContext().window));
         sf::Vector2f gpos = getContext().window->mapPixelToCoords(mpos);
         int x = static_cast<int>((gpos.x / static_cast<float>(tsize)));
@@ -251,11 +251,11 @@ bool EditState::update()
             {
                 map.push_back(std::vector<char>());
             }
-            while(map[ys].size() <= xs)
+            while(map.at(ys).size() <= xs)
             {
-                map[ys].push_back(' ');
+                map.at(ys).push_back(' ');
             }
-            map[ys][xs] = selChar;
+            map.at(ys).at(xs) = selChar;
         }
     }
 
@@ -315,9 +315,9 @@ bool EditState::handleEvent(const sf::Event& event)
 /*
         for(int y=0; y<map.size(); ++y)
         {
-            for(int x=0; x<map[y].size(); ++x)
+            for(int x=0; x<map.at(y).size(); ++x)
             {
-                of << map[y][x];
+                of << map.at(y).at(x);
             }
             if(y != map.size()-1)
                 of << '\n';
