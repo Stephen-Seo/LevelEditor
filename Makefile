@@ -1,11 +1,17 @@
-CXX = g++ -W -Wall -Wextra -pedantic -std=c++23
-CFLAGS = -c -g
+ifdef RELEASE
+	COMMON_FLAGS := -O3 -DNDEBUG
+else
+	COMMON_FLAGS := -Og -g
+endif
+
+CXX := g++ -W -Wall -Wextra -pedantic -std=c++23 ${COMMON_FLAGS}
+CFLAGS := -c
 #INCLUDE = -I/home/stephen/Downloads/SFML-latestish/include
-INCLUDE =
+INCLUDE :=
 #LINK = -L/home/stephen/Downloads/SFML-latestish/lib -lsfml-graphics -lsfml-window -lsfml-system
-LINK = -lsfml-graphics -lsfml-window -lsfml-system
-BINDIR = bin
-SOURCES = \
+LINK := -lsfml-graphics -lsfml-window -lsfml-system
+BINDIR := bin
+SOURCES := \
         src/game.o \
         src/stateStack.o \
         src/state.o \
