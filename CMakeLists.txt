@@ -11,8 +11,6 @@ set(LevelEditor_SOURCES
 
 add_executable(LevelEditor ${LevelEditor_SOURCES})
 
-target_compile_features(LevelEditor PUBLIC cxx_std_23)
-
 add_compile_options(
     -Wall -Wextra -Wpedantic -Wno-missing-braces
 )

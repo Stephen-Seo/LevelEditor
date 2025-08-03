@@ -1,5 +1,6 @@
-
 #include "stateStack.hpp"
+
+#include <algorithm>
 
 StateStack::PendingChange::PendingChange(Action action, States::ID stateID)
 : action(action), stateID(stateID)
